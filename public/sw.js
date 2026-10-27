@@ -1,4 +1,5 @@
-const CACHE_NAME = "ethio-transport-shell-v1";
+const CACHE_NAME = "ethio-transport-shell-v2";
+const DATA_CACHE = "ethio-transport-data-v1";
 const APP_SHELL = ["/","/manifest.webmanifest","/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -20,6 +21,20 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname === "/api/tickets" || url.pathname === "/api/emergency" || url.pathname === "/api/fares") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(DATA_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || new Response(JSON.stringify({ error: "Offline data is not available yet." }), { status: 503, headers: { "content-type": "application/json" } })))
+    );
+    return;
+  }
   if (url.pathname.startsWith("/api/")) return;
   event.respondWith(
     fetch(request)
