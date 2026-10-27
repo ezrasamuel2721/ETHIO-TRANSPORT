@@ -9,7 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
-public class MainActivity extends AppCompatActivity {\n    private WebView web;
+public class MainActivity extends AppCompatActivity {
+    private WebView web;
     private static final String START_URL = "https://ethio-transport.vercel.app/";
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity {\n    private WebView web;
         settings.setDatabaseEnabled(true);
         settings.setLoadsImagesAutomatically(true);
         settings.setAllowFileAccess(false);
+        settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
@@ -37,8 +39,21 @@ public class MainActivity extends AppCompatActivity {\n    private WebView web;
 
     @Override
     public void onBackPressed() {
-        WebView web = (WebView) findViewById(android.R.id.content).getRootView();
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        if (web != null && web.canGoBack()) {
+            web.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (web != null) {
+            web.stopLoading();
+            web.setWebViewClient(null);
+            web.destroy();
+            web = null;
+        }
+        super.onDestroy();
     }
 }
