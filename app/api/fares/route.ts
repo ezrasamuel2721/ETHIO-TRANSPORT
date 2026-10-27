@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (!base || !key) return json({ error: "Fare database is not configured." }, 503);
 
   const url = new URL("/rest/v1/transport_fares", base);
-  url.searchParams.set("select", "id,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,currency,effective_from,effective_to,status,source_id");
+  url.searchParams.set("select", "id,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,currency,effective_from,effective_to,status,source_id(organization_name,source_url,title)");
   url.searchParams.set("service_type", `eq.${serviceType}`);
   url.searchParams.set("status", "eq.active");
   url.searchParams.set("order", "effective_from.desc");
@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const response = await fetch(url, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
     const data = await response.json();
     if (!response.ok) return json({ error: "Could not read verified fare data." }, 502);
