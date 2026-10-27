@@ -68,7 +68,7 @@ function load<T>(key:string,fallback:T):T{try{const v=localStorage.getItem(key);
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
- const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null);
+ const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false);\n const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
  const [coords,setCoords]=useState<{lat:number,lon:number}|null>(null),[status,setStatus]=useState(""),[ref,setRef]=useState("");
  const [report,setReport]=useState({name:"",phone:"",category:"Fare / overcharge",description:"",location:""});
  const [trip,setTrip]=useState({origin:"",destination:"",time:"",notes:""}),[savedTrips,setSavedTrips]=useState<any[]>([]);
@@ -81,7 +81,33 @@ export default function Home(){
  const reportReady=useMemo(()=>report.description.trim().length>=5,[report.description]);
 
  function locate(){if(!navigator.geolocation){setStatus("GPS is not supported.");return} navigator.geolocation.getCurrentPosition(p=>{const c={lat:p.coords.latitude,lon:p.coords.longitude};setCoords(c);setReport(x=>({...x,location:x.location||c.lat.toFixed(6)+", "+c.lon.toFixed(6)}));setStatus("Location captured.")},()=>setStatus("Could not read location."))}
- function findRoute(e:FormEvent){e.preventDefault();if(!origin.trim()||!destination.trim()){setStatus("Enter origin and destination.");return}window.open(mapsUrl(origin,destination),"_blank","noopener,noreferrer")}
+ async function findRoute(e:FormEvent){
+   e.preventDefault();
+   if(!origin.trim()||!destination.trim()){setStatus(lang==="am"?"መነሻና መድረሻ ያስገቡ።":lang==="en"?"Enter origin and destination.":"Ka'umsaa fi ga'umsaa galchi.");return}
+   setRouteLoading(true);setRouteData(null);setStatus("");
+   try{
+    const r=await fetch("/api/routes?origin="+encodeURIComponent(origin)+"&destination="+encodeURIComponent(destination),{cache:"no-store"});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"Route unavailable");
+    setRouteData(d);
+   }catch(e:any){setStatus(e?.message||"Route service unavailable.");}
+   finally{setRouteLoading(false);}
+  }
+  async function loadVerifiedFare(){
+   setFareLoading(true);setFareResult(null);setFareSource("");
+   try{
+    const r=await fetch("/api/fares?serviceType="+encodeURIComponent(fareType),{cache:"no-store"});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"Fare service unavailable.");
+    const row=d.fares?.[0];
+    if(!row){setFareRate("");setStatus(lang==="am"?"ለዚህ አገልግሎት የተረጋገጠ ንቁ ታሪፍ አልተገኘም።":lang==="en"?"No verified active fare is currently available for this service.":"Tajaajila kanaaf kaffaltiin mirkanaa'e amma hin jiru.");return}
+    setFareRate(String(row.rate_per_km ?? ""));
+    setFareSource(row.source_id ? "Verified source record: "+row.source_id : "Verified fare record");
+    if(row.minimum_fare!=null)setStatus("Minimum fare: "+row.minimum_fare+" "+(row.currency||"ETB"));
+    else setStatus("");
+   }catch(e:any){setStatus(e?.message||"Fare service unavailable.");}
+   finally{setFareLoading(false);}
+  }
  async function addTrip(){if(!trip.origin.trim()||!trip.destination.trim()){setStatus("Enter origin and destination.");return}const createdAt=new Date().toISOString();const id=crypto.randomUUID();const next=[{...trip,id,createdAt},...savedTrips].slice(0,20);setSavedTrips(next);save("ethio_transport_trips",next);setStatus(L.saved);try{if(trip.time){await fetch("/api/trip-proofs",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({reference:"ET-TRIP-"+id,origin:trip.origin,destination:trip.destination,plannedAt:new Date(trip.time).toISOString(),notes:trip.notes})})}}catch{}}
  async function submitReport(e:FormEvent){e.preventDefault();const id="ET-"+new Date().toISOString().replace(/\D/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,7).toUpperCase();const payload={...report,reference:id,createdAt:new Date().toISOString(),coordinates:coords};try{const r=await fetch("/api/complaints",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});if(r.ok){const d=await r.json();setRef(d.reference||id);setStatus(L.received);return}}catch{}save("ethio_transport_reports",[payload,...load<any[]>("ethio_transport_reports",[])].slice(0,50));setRef(id);setStatus(L.received)}
  function saveAccess(){save("ethio_transport_accessibility",{need:accessNeed,savedAt:new Date().toISOString()});setStatus(L.saved)}
@@ -109,9 +135,9 @@ export default function Home(){
    <div className="modal-hero"><img src={selected?.image} alt="" /><div><span className="eyebrow dark">{L.active}</span><h2 id="service-title">{lang==="am"?selected?.am:lang==="en"?selected?.en:selected?.ao}</h2></div><button className="close" onClick={()=>setActive(null)}>{L.close} ×</button></div>
    <div className="modal-content">
 
-   {active==="origin"&&<form className="feature-form" onSubmit={findRoute}><div className="form-grid"><label>{L.from}<input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder={L.from}/></label><label>{L.to}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={L.to}/></label><label>{L.date}<input type="date" value={tripDate} onChange={e=>setTripDate(e.target.value)}/></label></div><div className="action-row"><button className="primary">🗺️ {L.find}</button>{origin&&destination&&<a className="outline" target="_blank" rel="noreferrer" href={mapsUrl(origin,destination)}>{L.map} ↗</a>}</div><div className="info-strip"><strong>{L.routeNote}</strong></div></form>}
+   {active==="origin"&&<form className="feature-form" onSubmit={findRoute}><div className="form-grid"><label>{L.from}<input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder={L.from}/></label><label>{L.to}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={L.to}/></label><label>{L.date}<input type="date" value={tripDate} onChange={e=>setTripDate(e.target.value)}/></label></div><div className="action-row"><button className="primary" disabled={routeLoading}>🧭 {routeLoading?(lang==="am"?"እየፈለገ ነው…":lang==="en"?"Finding…":"Barbaadaa jira…"):L.find}</button>{routeData&&<a className="outline" target="_blank" rel="noreferrer" href={routeData.mapsUrl}>{L.map} ↗</a>}</div>{routeData&&<div className="route-result"><div><span>{L.distance}</span><strong>{routeData.distanceKm} km</strong></div><div><span>{lang==="am"?"የጉዞ ጊዜ":lang==="en"?"Travel time":"Yeroo imalaa"}</span><strong>{routeData.durationMinutes!=null?Math.round(routeData.durationMinutes)+" min":"—"}</strong></div><small>{routeData.estimated?(lang==="am"?"ግምታዊ ርቀት":"Estimated distance"):routeData.provider}</small></div>}{status&&<div className="info-strip"><strong>{status}</strong></div>}<div className="info-strip"><strong>{L.routeNote}</strong></div></form>}
 
-   {active==="fare"&&<div className="feature-form"><div className="fare-layout"><div className="fare-visual"><span>💳</span><strong>{L.fare}</strong><small>{L.calculate}</small></div><div className="form-grid"><label>{L.distance}<input inputMode="decimal" value={fareKm} onChange={e=>setFareKm(e.target.value)} placeholder="10"/></label><label>{L.rate}<input inputMode="decimal" value={fareRate} onChange={e=>setFareRate(e.target.value)} placeholder={L.rate}/></label></div></div><button className="primary" onClick={()=>{const k=Number(fareKm),r=Number(fareRate);setFareResult(Number.isFinite(k*r)&&k>=0&&r>=0?k*r:null)}}>{L.calculate}</button>{fareResult!==null&&<div className="big-result"><span>{L.fare}</span><strong>{fareResult.toFixed(2)} ETB</strong><small>{fareKm} km × {fareRate} ETB/km</small></div>}<div className="info-strip"><strong>{L.calcNote}</strong></div></div>}
+   {active==="fare"&&<div className="feature-form"><div className="fare-layout"><div className="fare-visual"><span>💳</span><strong>{L.fare}</strong><small>{L.calculate}</small></div><div className="form-grid"><label>{L.distance}<input inputMode="decimal" value={fareKm} onChange={e=>setFareKm(e.target.value)} placeholder={routeData?.distanceKm?"":"10"}/></label><label>{lang==="am"?"አገልግሎት":lang==="en"?"Service":"Tajaajila"}<select value={fareType} onChange={e=>{setFareType(e.target.value);setFareRate("");setFareSource("");setFareResult(null)}}><option value="bus">{lang==="am"?"አውቶቡስ":lang==="en"?"Bus":"Baasi"}</option><option value="taxi">{lang==="am"?"ታክሲ":lang==="en"?"Taxi":"Taaksii"}</option><option value="rail">{lang==="am"?"ባቡር":lang==="en"?"Rail":"Baabura"}</option></select></label></div></div><div className="action-row"><button className="outline" type="button" onClick={loadVerifiedFare} disabled={fareLoading}>✓ {fareLoading?(lang==="am"?"እየፈለገ…":lang==="en"?"Checking…":"Ilaalaa jira…"):(lang==="am"?"የተረጋገጠ ታሪፍ ፈልግ":lang==="en"?"Get verified fare":"Kaffaltii mirkanaa'e barbaadi")}</button><button className="primary" type="button" onClick={()=>{const k=Number(fareKm),r=Number(fareRate);setFareResult(Number.isFinite(k*r)&&k>=0&&r>=0&&fareRate!==""?k*r:null)}}>{L.calculate}</button></div>{fareSource&&<div className="info-strip"><strong>{fareSource}</strong></div>}{fareResult!==null&&<div className="big-result"><span>{L.fare}</span><strong>{fareResult.toFixed(2)} ETB</strong><small>{fareKm} km × {fareRate} ETB/km</small></div>}{status&&<div className="info-strip"><strong>{status}</strong></div>}<div className="info-strip"><strong>{L.calcNote}</strong></div></div>}
 
    {active==="ticket"&&<div className="ticket-hub"><div className="ticket-banner"><div><span className="eyebrow">{L.live}</span><h3>{L.ticketTitle}</h3><p>{L.ticketIntro}</p></div><span className="ticket-badge">8 PLATFORMS</span></div><h3 className="subheading">{L.platforms}</h3><div className="platform-grid">{ticketPlatforms.map(p=><a className="platform-card" key={p.name} href={p.url} target="_blank" rel="noreferrer"><img src={p.image} alt={p.name} loading="lazy"/><div><strong>{p.name}</strong><span>{p.meta}</span><b>{L.book} ↗</b></div></a>)}</div><h3 className="subheading">{L.buses}</h3><div className="operator-grid">{operators.map(([name,img],i)=><div className="operator" key={name}><img src={img} alt="" loading="lazy"/><div><span>{String(i+1).padStart(2,"0")}</span><strong>{name}</strong><a href="https://i-ticket.et/" target="_blank" rel="noreferrer">{L.book} ↗</a></div></div>)}</div><div className="info-strip"><strong>{L.ticketNote}</strong></div></div>}
 
