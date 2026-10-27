@@ -24,6 +24,7 @@ async function geocode(query: string): Promise<Point | null> {
   const response = await fetch(url, {
     headers: { "User-Agent": "ETHIO-TRANSPORT/1.0 (public transport routing)" },
     cache: "no-store",
+    signal: AbortSignal.timeout(8000),
   });
   if (!response.ok) return null;
   const rows = await response.json();
@@ -33,7 +34,7 @@ async function geocode(query: string): Promise<Point | null> {
 
 async function routeWithOsrm(a: Point, b: Point) {
   const url = `https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false&steps=false`;
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(10000) });
   if (!response.ok) return null;
   const data = await response.json();
   const route = data?.routes?.[0];
