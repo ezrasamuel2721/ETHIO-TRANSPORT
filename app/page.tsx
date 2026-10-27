@@ -68,7 +68,8 @@ function load<T>(key:string,fallback:T):T{try{const v=localStorage.getItem(key);
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
- const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false);\n const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
+ const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false);
+ const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
  const [coords,setCoords]=useState<{lat:number,lon:number}|null>(null),[status,setStatus]=useState(""),[ref,setRef]=useState("");
  const [report,setReport]=useState({name:"",phone:"",category:"Fare / overcharge",description:"",location:""});
  const [trip,setTrip]=useState({origin:"",destination:"",time:"",notes:""}),[savedTrips,setSavedTrips]=useState<any[]>([]);
