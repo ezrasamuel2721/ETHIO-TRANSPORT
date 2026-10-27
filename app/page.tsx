@@ -101,3 +101,4 @@ export default function Home(){
 
   <footer><strong>ETHIO TRANSPORT</strong><span>Public information platform • verified-source architecture • responsible-authority integration</span></footer>
  </main>
+}
