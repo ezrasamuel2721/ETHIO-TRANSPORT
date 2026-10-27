@@ -103,7 +103,7 @@ export default function Home(){
     const row=d.fares?.[0];
     if(!row){setFareRate("");setStatus(lang==="am"?"ለዚህ አገልግሎት የተረጋገጠ ንቁ ታሪፍ አልተገኘም።":lang==="en"?"No verified active fare is currently available for this service.":"Tajaajila kanaaf kaffaltiin mirkanaa'e amma hin jiru.");return}
     setFareRate(String(row.rate_per_km ?? ""));
-    setFareSource(row.source_id ? "Verified source record: "+row.source_id : "Verified fare record");
+    setFareSource(row.source_id?.organization_name ? "Verified source: "+row.source_id.organization_name : "Verified fare record");
     if(row.minimum_fare!=null)setStatus("Minimum fare: "+row.minimum_fare+" "+(row.currency||"ETB"));
     else setStatus("");
    }catch(e:any){setStatus(e?.message||"Fare service unavailable.");}
