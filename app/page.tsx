@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
-type Lang = "am" | "en" | "ao";
+type Lang = "am" | "en" | "ao" | "ti" | "so" | "ar" | "fr" | "de" | "es" | "zh" | "it" | "pt" | "tr" | "sw";
+const LANG_OPTIONS: Array<{value:Lang,label:string}> = [{value:"am",label:"አማ"},{value:"en",label:"EN"},{value:"ao",label:"AO"},{value:"ti",label:"ትግ"},{value:"so",label:"SO"},{value:"ar",label:"عربي"},{value:"fr",label:"FR"},{value:"de",label:"DE"},{value:"es",label:"ES"},{value:"zh",label:"中文"},{value:"it",label:"IT"},{value:"pt",label:"PT"},{value:"tr",label:"TR"},{value:"sw",label:"SW"}];
 type ServiceId = "origin"|"fare"|"ticket"|"report"|"map"|"emergency"|"trusted"|"access"|"parcel"|"offline";
 
 const serviceData = [
@@ -104,7 +105,7 @@ export default function Home(){
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
  useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%3),5200);return()=>window.clearInterval(id)},[]);
  useEffect(()=>save("ethio_transport_lang",lang),[lang]);
- useEffect(()=>{document.documentElement.lang=lang==="am"?"am":lang==="ao"?"om":"en"},[lang]);
+ useEffect(()=>{document.documentElement.lang=lang==="am"?"am":lang==="ao"?"om":lang},[lang]);
  useEffect(()=>{if(active==="ticket"){fetch("/api/tickets",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.providers))setTicketProviders(d.providers)}).catch(()=>{});fetch("/api/operators",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.operators))setOperatorProviders(d.operators)}).catch(()=>{});} if(active==="emergency"){fetch("/api/emergency",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.contacts))setEmergencyContacts(d.contacts)}).catch(()=>{});}},[active]);
  const reportReady=useMemo(()=>report.description.trim().length>=5,[report.description]);
 
@@ -142,7 +143,7 @@ export default function Home(){
  function saveParcel(){if(!parcel.from||!parcel.to||!parcel.description){setStatus("Complete the form first.");return}save("ethio_transport_parcel",parcel);setStatus(L.saved)}
 
  return <main className="app">
-  <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}><option value="am">አማ</option><option value="en">EN</option><option value="ao">AO</option></select></header>
+  <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}>{LANG_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></header>
 
   <section className="hero" aria-label="ETHIO TRANSPORT">
    <div className="hero-slides" aria-hidden="true">{heroSlides.map((slide,i)=><div key={slide.image} className={"hero-slide "+(i===heroIndex?"active":"")} style={{backgroundImage:"url("+slide.image+")"}} />)}</div>
