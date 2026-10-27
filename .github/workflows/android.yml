@@ -33,12 +33,15 @@ jobs:
           gradle-version: "8.10"
 
       - name: Decode release keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/ethio-transport-release.jks
-          test -s /tmp/ethio-transport-release.jks
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/ethio-transport-release.jks
+            test -s /tmp/ethio-transport-release.jks
+          else
+            echo "No release keystore configured; building an unsigned release bundle for CI verification."
+          fi
 
       - name: Build release bundle
         env:
