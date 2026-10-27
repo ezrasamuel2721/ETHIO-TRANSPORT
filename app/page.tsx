@@ -102,7 +102,7 @@ export default function Home(){
 
  useEffect(()=>{setLang(load<Lang>("ethio_transport_lang","am"));setSavedTrips(load("ethio_transport_trips",[]));flushQueuedActions();const onOnline=()=>flushQueuedActions();window.addEventListener("online",onOnline);return()=>window.removeEventListener("online",onOnline)},[]);
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
- useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%cardVisuals.length),5200);return()=>window.clearInterval(id)},[]);
+ useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%3),5200);return()=>window.clearInterval(id)},[]);
  useEffect(()=>save("ethio_transport_lang",lang),[lang]);
  useEffect(()=>{document.documentElement.lang=lang==="am"?"am":lang==="ao"?"om":"en"},[lang]);
  useEffect(()=>{if(active==="ticket"){fetch("/api/tickets",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.providers))setTicketProviders(d.providers)}).catch(()=>{});fetch("/api/operators",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.operators))setOperatorProviders(d.operators)}).catch(()=>{});} if(active==="emergency"){fetch("/api/emergency",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.contacts))setEmergencyContacts(d.contacts)}).catch(()=>{});}},[active]);
