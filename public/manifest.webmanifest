@@ -1,0 +1,16 @@
+{
+  "name":"ETHIO TRANSPORT",
+  "short_name":"ETHIO TRANSPORT",
+  "description":"Ethiopia's public transport information and service platform",
+  "lang":"am",
+  "dir":"ltr",
+  "start_url":"/",
+  "scope":"/",
+  "display":"standalone",
+  "background_color":"#f5faf7",
+  "theme_color":"#006b3c",
+  "orientation":"portrait-primary",
+  "icons":[
+    {"src":"/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
