@@ -22,12 +22,17 @@ export async function GET() {
   }
 
   try {
-    const [sources, tickets, emergency] = await Promise.all([
+    const [sources, tickets, emergency, operators, routes, fares, complaints, trips] = await Promise.all([
       checkTable(base, key, "transport_sources"),
       checkTable(base, key, "ticket_providers"),
       checkTable(base, key, "emergency_contacts"),
+      checkTable(base, key, "transport_operators"),
+      checkTable(base, key, "transport_routes"),
+      checkTable(base, key, "transport_fares"),
+      checkTable(base, key, "transport_complaints"),
+      checkTable(base, key, "trip_proofs"),
     ]);
-    const ok = sources && tickets && emergency;
+    const ok = sources && tickets && emergency && operators && routes && fares && complaints && trips;
     return NextResponse.json(
       { ok, database: ok ? "reachable" : "degraded", checks: { sources, tickets, emergency, operators, routes, fares, complaints, trips }, latencyMs: Date.now() - started },
       { status: ok ? 200 : 503, headers: { "Cache-Control": "no-store" } }
