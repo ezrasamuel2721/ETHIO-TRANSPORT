@@ -25,7 +25,7 @@ async function getReviewer(request: Request) {
   const role = user?.app_metadata?.role;
   if (role !== "reviewer" && role !== "admin") return null;
 
-  return { id: String(user.id), role: String(role) };
+  return { id: String(user.id), role: String(role), authorization: auth };
 }
 
 function errorResponse(message: string, status = 400) {
@@ -114,7 +114,7 @@ export async function PATCH(request: Request) {
       headers: {
         "content-type": "application/json",
         apikey: supabaseKey,
-        Authorization: "Bearer " + supabaseKey,
+        Authorization: reviewer.authorization,
         Prefer: "return=representation",
       },
       body: JSON.stringify(payload),
