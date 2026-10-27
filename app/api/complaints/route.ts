@@ -3,23 +3,39 @@ import { NextResponse } from "next/server";
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 
+const text = (value: unknown, max: number) => {
+  if (value == null) return null;
+  const v = String(value).trim();
+  return v ? v.slice(0, max) : null;
+};
+
 export async function POST(request: Request){
   try{
     const body=await request.json();
-    if(!body?.description || String(body.description).trim().length<5){
+    const description=text(body?.description, 4000);
+    if(!description || description.length<5){
       return NextResponse.json({error:"Description is required."},{status:400});
     }
 
-    const reference=String(body.reference||"ET-"+Date.now());
+    const latitude=body?.latitude == null ? null : Number(body.latitude);
+    const longitude=body?.longitude == null ? null : Number(body.longitude);
+    if(latitude !== null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)){
+      return NextResponse.json({error:"Invalid latitude."},{status:400});
+    }
+    if(longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)){
+      return NextResponse.json({error:"Invalid longitude."},{status:400});
+    }
+
+    const reference=text(body?.reference, 80) || "ET-"+Date.now();
     const record={
       reference,
-      name: body.name ? String(body.name) : null,
-      phone: body.phone ? String(body.phone) : null,
-      category: body.category ? String(body.category) : null,
-      location: body.location ? String(body.location) : null,
-      description: String(body.description).trim(),
-      latitude: Number.isFinite(Number(body.latitude)) ? Number(body.latitude) : null,
-      longitude: Number.isFinite(Number(body.longitude)) ? Number(body.longitude) : null
+      name:text(body?.name, 120),
+      phone:text(body?.phone, 40),
+      category:text(body?.category, 120),
+      location:text(body?.location, 300),
+      description,
+      latitude,
+      longitude
     };
 
     if(supabaseUrl && supabaseKey){
@@ -32,7 +48,8 @@ export async function POST(request: Request){
           Prefer:"return=minimal"
         },
         body:JSON.stringify(record),
-        cache:"no-store"
+        cache:"no-store",
+        signal:AbortSignal.timeout(10000)
       });
       if(!r.ok){
         const detail=await r.text();
@@ -45,7 +62,8 @@ export async function POST(request: Request){
       const r=await fetch(webhook,{
         method:"POST",
         headers:{"content-type":"application/json"},
-        body:JSON.stringify({...record,product:"ETHIO TRANSPORT"})
+        body:JSON.stringify({...record,product:"ETHIO TRANSPORT"}),
+        signal:AbortSignal.timeout(10000)
       });
       if(!r.ok)return NextResponse.json({error:"Responsible-authority endpoint rejected the report."},{status:502});
     }
