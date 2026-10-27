@@ -8,3 +8,26 @@
 .hero-controls button.active{width:58px;background:#ffd84d}
 .hero-controls button:focus-visible{outline:3px solid #fff;outline-offset:4px}
 @media(max-width:620px){.hero{min-height:560px;padding-bottom:70px}.hero-controls{left:16px;bottom:23px}.hero-controls button{width:26px}.hero-controls button.active{width:45px}}
+
+/* Refined transport visuals: brighter hero, more prominent service titles and bus names */
+.hero-slide{filter:brightness(1.12) saturate(1.08);transition:opacity 1.15s ease,transform 7s ease,filter 1.15s ease}
+.hero-overlay{background:linear-gradient(90deg,rgba(0,45,27,.72) 0%,rgba(0,77,44,.34) 52%,rgba(0,45,27,.12) 100%),linear-gradient(0deg,rgba(0,32,20,.68),rgba(0,32,20,.04) 72%)}
+.hero-copy{position:relative;z-index:3;text-shadow:0 3px 18px rgba(0,0,0,.45)}
+.hero h1{max-width:900px;text-shadow:0 4px 24px rgba(0,0,0,.55)}
+.hero p{max-width:780px;text-shadow:0 3px 16px rgba(0,0,0,.48)}
+.card-title-overlay{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:center;gap:10px;z-index:2;color:#fff}
+.card-title-overlay span{width:48px;height:48px;flex:0 0 48px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.9);color:#075a3a;font-size:25px;box-shadow:0 7px 20px rgba(0,0,0,.28)}
+.card-title-overlay h3{margin:0!important;font-size:clamp(18px,1.55vw,23px)!important;line-height:1.15!important;font-weight:950!important;letter-spacing:-.2px;color:#fff!important;text-shadow:0 3px 14px rgba(0,0,0,.72)}
+.card-body .card-kicker{display:none}
+.card-body p{min-height:52px}
+.operator>div{min-width:0;flex:1;padding:13px 14px}
+.operator strong{font-size:20px;line-height:1.15;font-weight:1000;color:#075b3a;letter-spacing:-.2px}
+.operator a{font-size:12px}
+.operator span{font-size:10px}
+@media(max-width:620px){
+ .card-title-overlay{left:11px;right:11px;bottom:11px}
+ .card-title-overlay span{width:44px;height:44px;flex-basis:44px;font-size:23px}
+ .card-title-overlay h3{font-size:20px!important}
+ .operator strong{font-size:19px}
+ .hero-slide{filter:brightness(1.16) saturate(1.08)}
+}
