@@ -97,6 +97,22 @@ const SERVICE_I18N: Record<Lang, Record<ServiceId, {title:string;desc:string}>> 
  sw:{origin:{title:"Kitafutaji wa njia",desc:"Tafuta mwanzo, unakoenda na njia katika sehemu moja."},fare:{title:"Ulinzi wa nauli",desc:"Hesabu nauli kulingana na umbali kwa uwazi kwa kutumia kiwango kilichochapishwa na mamlaka."},ticket:{title:"Tiketi na Mabasi",desc:"Tafuta majukwaa ya tiketi na waendeshaji wa mabasi."},report:{title:"Ripoti tatizo",desc:"Ripoti matatizo ya nauli, njia, usalama au huduma."},map:{title:"Ramani ya matatizo",desc:"Pata eneo la tatizo kwa GPS na ulifungue kwenye ramani."},emergency:{title:"Msaada wa dharura",desc:"Wafikie polisi, ambulensi na zimamoto haraka."},trusted:{title:"Safari ya kuaminika",desc:"Hifadhi mwanzo, unakoenda, muda na maelezo kama rekodi ya safari."},access:{title:"Ufikiaji",desc:"Chagua na uhifadhi mahitaji yako ya ufikiaji wakati wa safari."},parcel:{title:"Kifurushi / Hati",desc:"Panga usafirishaji wa vifurushi na hati tofauti."},offline:{title:"Bila mtandao / Data kidogo",desc:"Weka safari na ripoti zilizohifadhiwa zikiwa zinapatikana kwa matumizi madogo ya data."}}
 };
 const serviceText=(lang:Lang,id:ServiceId)=>SERVICE_I18N[lang]?.[id]||SERVICE_I18N.en[id];
+
+for (const code of LANG_OPTIONS.map(x=>x.value)) if (!T[code]) T[code] = {...T.en};
+const UI_CORE: Partial<Record<Lang, Partial<typeof T.en>>> = {
+ ti:{sub:"መድረኽ ሓበሬታን ኣገልግሎትን ህዝባዊ መጓጓዣ ኢትዮጵያ",services:"ዋና ኣገልግሎታት",open:"ክፈት",close:"ዕጸው",ticket:"ትኬት",fare:"ታሪፍ",report:"ጥርዓን",emergency:"ህጹጽ ሓገዝ"},
+ so:{sub:"Madasha xogta iyo adeegyada gaadiidka dadweynaha Itoobiya",services:"Adeegyada muhiimka ah",open:"Fur",close:"Xir",ticket:"Tigidhada",fare:"Lacagta safarka",report:"Cabasho",emergency:"Degdeg"},
+ ar:{sub:"منصة معلومات وخدمات النقل العام في إثيوبيا",services:"الخدمات الأساسية",open:"فتح",close:"إغلاق",ticket:"التذاكر",fare:"الأجرة",report:"بلاغ",emergency:"طوارئ"},
+ fr:{sub:"Plateforme d'information et de services de transport public d'Éthiopie",services:"Services principaux",open:"Ouvrir",close:"Fermer",ticket:"Billets",fare:"Tarif",report:"Signaler",emergency:"Urgence"},
+ de:{sub:"Informations- und Serviceplattform für den öffentlichen Verkehr in Äthiopien",services:"Kernservices",open:"Öffnen",close:"Schließen",ticket:"Tickets",fare:"Fahrpreis",report:"Melden",emergency:"Notfall"},
+ es:{sub:"Plataforma de información y servicios de transporte público de Etiopía",services:"Servicios principales",open:"Abrir",close:"Cerrar",ticket:"Billetes",fare:"Tarifa",report:"Informar",emergency:"Emergencia"},
+ zh:{sub:"埃塞俄比亚公共交通信息与服务平台",services:"核心服务",open:"打开",close:"关闭",ticket:"车票",fare:"票价",report:"报告问题",emergency:"紧急情况"},
+ it:{sub:"Piattaforma di informazioni e servizi per il trasporto pubblico dell'Etiopia",services:"Servizi principali",open:"Apri",close:"Chiudi",ticket:"Biglietti",fare:"Tariffa",report:"Segnala",emergency:"Emergenza"},
+ pt:{sub:"Plataforma de informação e serviços de transporte público da Etiópia",services:"Serviços principais",open:"Abrir",close:"Fechar",ticket:"Bilhetes",fare:"Tarifa",report:"Reportar",emergency:"Emergência"},
+ tr:{sub:"Etiyopya kamu ulaşımı bilgi ve hizmet platformu",services:"Temel hizmetler",open:"Aç",close:"Kapat",ticket:"Biletler",fare:"Ücret",report:"Bildirim",emergency:"Acil durum"},
+ sw:{sub:"Jukwaa la taarifa na huduma za usafiri wa umma nchini Ethiopia",services:"Huduma kuu",open:"Fungua",close:"Funga",ticket:"Tiketi",fare:"Nauli",report:"Ripoti",emergency:"Dharura"}
+};
+for (const [code, values] of Object.entries(UI_CORE)) T[code as Lang] = {...T[code as Lang], ...values};
 function mapsUrl(a:string,b:string){return "https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(a)+"&destination="+encodeURIComponent(b)+"&travelmode=driving"}
 function save<T>(key:string,value:T){try{localStorage.setItem(key,JSON.stringify(value))}catch{}}
 function load<T>(key:string,fallback:T):T{try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}}
