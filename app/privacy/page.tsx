@@ -8,6 +8,7 @@ export default function PrivacyPage() {
       <Link href="/" style={{color:"#006b3c",fontWeight:700,textDecoration:"none"}}>← ETHIO TRANSPORT</Link>
       <h1>Privacy Policy</h1>
       <p><strong>Last updated: October 28, 2026</strong></p>
+      <p><strong>App:</strong> ETHIO TRANSPORT<br/><strong>Privacy contact:</strong> Ezra Samuel Abebe — ezrasamuel2721@gmail.com</p>
 
       <h2>1. What ETHIO TRANSPORT does</h2>
       <p>ETHIO TRANSPORT provides public-transport information and service tools for users in Ethiopia, including route and distance information, verified fare information when published by an authorized source, ticket-provider links, emergency contacts, problem reports, trip records, accessibility preferences, and low-data features.</p>
@@ -30,10 +31,13 @@ export default function PrivacyPage() {
       <h2>7. Data security</h2>
       <p>ETHIO TRANSPORT uses HTTPS for its online service endpoints. Sensitive credentials are not requested by the public app interface. Users should avoid including passwords, financial credentials, or unnecessary sensitive personal information in free-text reports.</p>
 
-      <h2>8. Contact</h2>
-      <p>For privacy questions or requests concerning information submitted through ETHIO TRANSPORT, contact the ETHIO TRANSPORT project operator through the contact information published with the service.</p>
+      <h2>8. Data retention and deletion</h2>
+      <p>Information saved only on your device can be removed by clearing the app's stored data or deleting the app. Information submitted to the ETHIO TRANSPORT online service is retained only as needed to receive, investigate, respond to, and maintain records of the submitted transport report or trip-proof service. You may contact the privacy contact below to request deletion of information that is no longer required for an active service, legal, security, or accountability purpose.</p>
 
-      <h2>9. Changes</h2>
+      <h2>9. Contact</h2>
+      <p>For privacy questions or deletion requests concerning information submitted through ETHIO TRANSPORT, contact Ezra Samuel Abebe at ezrasamuel2721@gmail.com.</p>
+
+      <h2>10. Changes</h2>
       <p>This policy may be updated when the service changes. The latest revision date is shown at the top of this page.</p>
 
       <p style={{marginTop:40}}><Link href="/" style={{color:"#006b3c",fontWeight:700}}>Return to ETHIO TRANSPORT</Link></p>
