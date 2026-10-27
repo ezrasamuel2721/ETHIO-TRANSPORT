@@ -1,17 +1,29 @@
 # ETHIO TRANSPORT
 
-Ethiopia's unified public transport information and service platform.
+Ethiopia's public transport information and service platform.
 
 ## Product direction
+ETHIO TRANSPORT is **not a ride-hailing app**. It is a public-facing transport information and service hub designed to receive, validate, organize and present official or authorized transport information.
 
-ETHIO TRANSPORT is not a ride-hailing app. It is a public-facing transport information and service hub designed to receive, validate, organize and present official or authorized transport information.
+## Working modules
+- Route Finder — origin/destination workflow with map handoff.
+- Fare Guard — transparent distance × verified-rate calculation; no invented official fares.
+- Ticket — prepared service gateway.
+- One-Tap Report — complaint/problem form with reference number, local offline fallback, and webhook integration.
+- Problem Map — device location and map handoff.
+- Emergency Help — authority-managed emergency contact architecture.
+- Trusted Trip — local Trip Proof record.
+- Accessibility — structured accessibility request.
+- Parcel / Document — separated service gateway.
+- Offline / Low Data — local records without fabricating live official information.
 
-Core areas include routes, distance, fares, tickets, passenger rights, safety, reports/complaints, trip records, Trip Proof, transport maps, official updates and source provenance.
+## Authority integrations
+Configure these Vercel environment variables when an authorized provider endpoint is available:
+- `TRANSPORT_COMPLAINT_WEBHOOK_URL`
+- `TRANSPORT_TARIFFS_URL`
+- `TRANSPORT_ROUTES_URL`
 
-## Data principle
+The app deliberately does not invent official fares, route schedules, ticket prices, authority names, or emergency numbers. Provider responses should include source organization, publication date, effective date, update timestamp and status.
 
-The application must not invent official transport information. Production data should enter through verified official/authorized sources and retain source organization, publication date, effective date, update history and current status.
-
-## Current repository
-
-This repository contains the initial Next.js application foundation and responsive grid UI. Backend integrations, authentication, database schema, source ingestion, maps, fare calculation and production integrations are subsequent implementation layers.
+## Production principle
+Official information must be traceable to its responsible/authorized source. Integration endpoints should be protected server-side; never expose private API keys in `NEXT_PUBLIC_*` variables.
