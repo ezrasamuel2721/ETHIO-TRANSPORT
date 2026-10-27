@@ -36,3 +36,7 @@
 .card-image img{animation:cardVisualIn .65s ease both}
 @keyframes cardVisualIn{from{opacity:.35;transform:scale(1.035)}to{opacity:1;transform:scale(1)}}
 @media(max-width:620px){.hero-wish{font-size:12px;padding:8px 12px;margin-top:12px}}
+
+
+.heritage-line{display:inline-flex;align-items:center;margin-bottom:10px;padding:6px 12px;border-radius:999px;background:rgba(0,107,60,.88);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:900;letter-spacing:.2px;box-shadow:0 6px 18px rgba(0,0,0,.16)}
+@media(max-width:620px){.heritage-line{font-size:11px;padding:5px 10px}}
