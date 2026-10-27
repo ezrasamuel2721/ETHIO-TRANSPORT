@@ -44,6 +44,14 @@ const operators = [
  ["Limalimo","https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=900&q=80"]
 ];
 
+const heroSlides = [
+ {image:"https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=2000&q=90",am:"ከተማን ከከተማ የሚያገናኝ ጉዞ",en:"Travel that connects cities",ao:"Imala magaalota walitti fidu",subAm:"የአውቶቡስ ጉዞዎን በቀላሉ ያዘጋጁ",subEn:"Plan your bus journey with confidence",subAo:"Imala baasii kee amanamummaadhaan qopheessi"},
+ {image:"https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=2000&q=90",am:"በባቡር ፈጣን እና ምቹ ጉዞ",en:"Fast and comfortable rail travel",ao:"Imala baaburaa saffisaa fi mijataa",subAm:"የባቡር ጉዞ መረጃን በአንድ ቦታ ያግኙ",subEn:"Find rail travel information in one place",subAo:"Odeeffannoo imala baaburaa bakka tokkoon argadhu"},
+ {image:"https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=2000&q=90",am:"ከኢትዮጵያ ወደ አለም የአየር ጉዞ",en:"Air travel from Ethiopia to the world",ao:"Imala xiyyaaraa Itoophiyaa irraa gara addunyaatti",subAm:"የጉዞ አማራጮችዎን ያግኙ እና ያወዳድሩ",subEn:"Discover and compare your travel options",subAo:"Filannoowwan imalaa kee argii fi walbira qabi"},
+ {image:"https://images.unsplash.com/photo-1494783367193-149034c05e8f?auto=format&fit=crop&w=2000&q=90",am:"የኢትዮጵያን መንገድ በአዲስ መንገድ ይጓዙ",en:"Experience Ethiopia on the road",ao:"Itoophiyaa karaa haaraadhaan daawwadhu",subAm:"ከመነሻ እስከ መድረሻ ጉዞዎን ያቀናብሩ",subEn:"Organize your journey from origin to destination",subAo:"Imala kee ka'umsaa irraa hanga ga'umsaa qindeessi"},
+ {image:"https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=2000&q=90",am:"ሁሉንም የመጓጓዣ አማራጮች በአንድ መድረክ",en:"Every transport option in one platform",ao:"Filannoo geejjibaa hunda waltajjii tokko irratti",subAm:"ETHIO TRANSPORT የጉዞ መረጃዎን ያቀላል",subEn:"ETHIO TRANSPORT makes travel information simpler",subAo:"ETHIO TRANSPORT odeeffannoo imalaa salphisa"}
+];
+
 const T = {
  am:{sub:"የኢትዮጵያ የህዝብ መጓጓዣ መረጃና አገልግሎት መድረክ",services:"ዋና ዋና አገልግሎቶች",open:"ክፈት",close:"ዝጋ",from:"መነሻ",to:"መድረሻ",date:"የጉዞ ቀን",find:"መንገድ ፈልግ",ticket:"ትኬት",fare:"ታሪፍ",report:"ቅሬታ",emergency:"አደጋ",distance:"ርቀት (ኪ.ሜ)",rate:"የተረጋገጠ ታሪፍ / ኪ.ሜ",calculate:"ታሪፍ አስላ",send:"ሪፖርቱን ላክ",received:"ሪፖርቱ ተቀብሏል።",location:"የችግሩ ቦታ",description:"ዝርዝር መግለጫ",name:"ስም",phone:"ስልክ",category:"የችግር ዓይነት",save:"አስቀምጥ",saved:"በስልክ ላይ ተቀምጧል",platforms:"የቲኬት መድረኮች",buses:"የአውቶቡስ ኦፕሬተሮች",book:"ትኬት ፈልግ",useGps:"የእኔን ቦታ ተጠቀም",map:"Google Maps ክፈት",live:"ቀጥታ አገናኞች",active:"ንቁ አገልግሎት",hero:"የጉዞ መረጃን በቀላሉ ያግኙ",hero2:"ባስ • ባቡር • አውሮፕላን • የህዝብ መጓጓዣ",source:"የመረጃ ምንጭ",official:"ኦፊሴላዊ ወይም የተፈቀደ መረጃ ብቻ",calcNote:"የታሪፍ መጠኑ በባለሥልጣን የታተመ መረጃ መሠረት ይሆናል።",ticketNote:"ቦታ ማስያዝና ክፍያ በቲኬት አቅራቢው ይፈጸማል።",routeNote:"መነሻ → መድረሻ → ካርታ → ጉዞን ማስቀመጥ።",problem:"ችግሩን ያሳውቁ",notes:"ማስታወሻ",time:"ጊዜ",details:"ዝርዝር",issue:"የችግር ዓይነት",wheel:"የዊልቸር ተደራሽነት",vision:"የእይታ እገዛ",hearing:"የመስማት እገዛ",elderly:"ለአረጋውያን እገዛ",other:"ሌላ",savedTrips:"የተቀመጡ ጉዞዎች",savedReports:"የተቀመጡ ሪፖርቶች",low:"ዝቅተኛ ዳታ",parcelDetails:"የፓርሴል / ሰነድ ዝርዝር",access:"ተደራሽነት",check:"የቲኬት አገልግሎት ይፈልጉ",ticketTitle:"ፈልግ • አወዳድር • ቲኬት ያስይዙ",ticketIntro:"የቲኬት መድረክ ይምረጡ፣ ጉዞን ይፈልጉ እና በአቅራቢው ያጠናቅቁ።"},
  en:{sub:"Ethiopia's public transport information and service platform",services:"Core services",open:"Open",close:"Close",from:"Origin",to:"Destination",date:"Travel date",find:"Find route",ticket:"Tickets",fare:"Fare",report:"Report",emergency:"Emergency",distance:"Distance (km)",rate:"Verified fare / km",calculate:"Calculate fare",send:"Submit report",received:"Report received.",location:"Problem location",description:"Description",name:"Name",phone:"Phone",category:"Issue type",save:"Save",saved:"Saved on this device",platforms:"Ticket platforms",buses:"Bus operators",book:"Find tickets",useGps:"Use my location",map:"Open Google Maps",live:"LIVE LINKS",active:"ACTIVE SERVICE",hero:"Find your journey information easily",hero2:"Bus • Rail • Air • Public transport",source:"Information source",official:"Official or authorized information only",calcNote:"The fare rate must come from an authority-published source.",ticketNote:"Booking and payment are completed with the ticket provider.",routeNote:"Origin → destination → map → save your trip.",problem:"Report a problem",notes:"Notes",time:"Time",details:"Details",issue:"Issue type",wheel:"Wheelchair access",vision:"Visual assistance",hearing:"Hearing assistance",elderly:"Elderly assistance",other:"Other",savedTrips:"Saved trips",savedReports:"Saved reports",low:"Low data",parcelDetails:"Parcel / document details",access:"Accessibility",check:"Check ticket services",ticketTitle:"Find • compare • book",ticketIntro:"Choose a ticket platform, search a journey and complete the booking with the provider."},
@@ -55,7 +63,7 @@ function save<T>(key:string,value:T){try{localStorage.setItem(key,JSON.stringify
 function load<T>(key:string,fallback:T):T{try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}}
 
 export default function Home(){
- const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null);
+ const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
  const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null);
  const [coords,setCoords]=useState<{lat:number,lon:number}|null>(null),[status,setStatus]=useState(""),[ref,setRef]=useState("");
@@ -65,6 +73,7 @@ export default function Home(){
  const L=T[lang], selected=serviceData.find(x=>x.id===active);
 
  useEffect(()=>{setLang(load<Lang>("ethio_transport_lang","am"));setSavedTrips(load("ethio_transport_trips",[]))},[]);
+ useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
  useEffect(()=>save("ethio_transport_lang",lang),[lang]);
  const reportReady=useMemo(()=>report.description.trim().length>=5,[report.description]);
 
@@ -78,11 +87,11 @@ export default function Home(){
  return <main className="app">
   <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}><option value="am">አማ</option><option value="en">EN</option><option value="ao">AO</option></select></header>
 
-  <section className="hero">
-   <div className="hero-photo" aria-hidden="true"></div><div className="hero-overlay"></div>
-   <div className="hero-copy"><span className="eyebrow">SMART MOBILITY • ETHIOPIA</span><h1>{L.hero}</h1><p>{L.hero2}</p><div className="transport-chips"><span>✈️ {lang==="am"?"አየር":"Air"}</span><span>🚆 {lang==="am"?"ባቡር":"Rail"}</span><span>🚌 {lang==="am"?"አውቶቡስ":"Bus"}</span></div></div>
-   <form className="quick-search" onSubmit={findRoute}><div><span>{L.from}</span><input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder={L.from}/></div><div><span>{L.to}</span><input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={L.to}/></div><div><span>{L.date}</span><input type="date" value={tripDate} onChange={e=>setTripDate(e.target.value)}/></div><button className="search-btn">{L.find} →</button></form>
-   <div className="trust"><span>✓ {L.official}</span><span>✓ Mobile-first</span><span>✓ {L.source}</span></div>
+  <section className="hero" aria-label="ETHIO TRANSPORT">
+   <div className="hero-slides" aria-hidden="true">{heroSlides.map((slide,i)=><div key={slide.image} className={"hero-slide "+(i===heroIndex?"active":"")} style={{backgroundImage:"url("+slide.image+")"}} />)}</div>
+   <div className="hero-overlay"></div>
+   <div className="hero-copy"><span className="eyebrow">SMART MOBILITY • ETHIOPIA</span><h1>{lang==="am"?heroSlides[heroIndex].am:lang==="en"?heroSlides[heroIndex].en:heroSlides[heroIndex].ao}</h1><p>{lang==="am"?heroSlides[heroIndex].subAm:lang==="en"?heroSlides[heroIndex].subEn:heroSlides[heroIndex].subAo}</p><div className="transport-chips"><span>✈️ {lang==="am"?"አየር":lang==="en"?"Air":"Xiyyaara"}</span><span>🚆 {lang==="am"?"ባቡር":lang==="en"?"Rail":"Baabura"}</span><span>🚌 {lang==="am"?"አውቶቡስ":lang==="en"?"Bus":"Baasii"}</span></div></div>
+   <div className="hero-controls" aria-label="Hero slides">{heroSlides.map((slide,i)=><button key={slide.image} type="button" aria-label={String(i+1)} aria-current={i===heroIndex} className={i===heroIndex?"active":""} onClick={()=>setHeroIndex(i)} />)}</div>
   </section>
 
   <div className="quick-actions"><button onClick={()=>setActive("ticket")}>🎫 {L.ticket}</button><button onClick={()=>setActive("fare")}>💳 {L.fare}</button><button onClick={()=>setActive("report")}>📝 {L.report}</button><button onClick={()=>setActive("emergency")}>🚨 {L.emergency}</button></div>
