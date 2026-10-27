@@ -9,14 +9,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {\n    private WebView web;
     private static final String START_URL = "https://ethio-transport.vercel.app/";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WebView web = new WebView(this);
+        web = new WebView(this);
         setContentView(web);
 
         WebSettings settings = web.getSettings();
