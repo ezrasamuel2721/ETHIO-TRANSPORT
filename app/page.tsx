@@ -165,6 +165,6 @@ export default function Home(){
    {active==="offline"&&<div className="offline-grid"><div className="offline-card"><span>🛡️</span><strong>{savedTrips.length} {L.savedTrips}</strong><small>{L.saved}</small></div><div className="offline-card"><span>📝</span><strong>{load<any[]>("ethio_transport_reports",[]).length} {L.savedReports}</strong><small>{load<QueuedAction[]>("ethio_transport_sync_queue",[]).length} {L.pending}</small></div><div className="offline-card"><span>📡</span><strong>{L.low}</strong><small>{L.official}</small></div></div>}
    </div></section></div>}
 
-  <footer><strong>ETHIO TRANSPORT</strong><span>{L.sub} • {L.official}</span></footer>
+  <footer><strong>ETHIO TRANSPORT</strong><span>{L.sub} • {L.official}</span><a href="/privacy" className="privacy-link">Privacy Policy</a></footer>
  </main>
 }
