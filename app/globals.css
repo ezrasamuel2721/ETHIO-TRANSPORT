@@ -31,3 +31,8 @@
  .operator strong{font-size:19px}
  .hero-slide{filter:brightness(1.16) saturate(1.08)}
 }
+
+.hero-wish{display:inline-flex;align-items:center;margin-top:14px;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.32);backdrop-filter:blur(10px);font-size:13px;font-weight:950;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.card-image img{animation:cardVisualIn .65s ease both}
+@keyframes cardVisualIn{from{opacity:.35;transform:scale(1.035)}to{opacity:1;transform:scale(1)}}
+@media(max-width:620px){.hero-wish{font-size:12px;padding:8px 12px;margin-top:12px}}
