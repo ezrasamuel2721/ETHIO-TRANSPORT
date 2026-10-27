@@ -21,7 +21,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname === "/api/tickets" || url.pathname === "/api/emergency" || url.pathname === "/api/fares") {
+  if (url.pathname === "/api/tickets" || url.pathname === "/api/emergency" || url.pathname === "/api/fares" || url.pathname === "/api/operators") {
     event.respondWith(
       fetch(request)
         .then((response) => {
