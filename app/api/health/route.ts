@@ -29,7 +29,7 @@ export async function GET() {
     ]);
     const ok = sources && tickets && emergency;
     return NextResponse.json(
-      { ok, database: ok ? "reachable" : "degraded", checks: { sources, tickets, emergency }, latencyMs: Date.now() - started },
+      { ok, database: ok ? "reachable" : "degraded", checks: { sources, tickets, emergency, operators, routes, fares, complaints, trips }, latencyMs: Date.now() - started },
       { status: ok ? 200 : 503, headers: { "Cache-Control": "no-store" } }
     );
   } catch {
