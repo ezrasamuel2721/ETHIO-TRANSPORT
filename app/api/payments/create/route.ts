@@ -18,9 +18,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unsupported payment provider." }, { status: 400 });
     }
 
-    const finalAmount = purpose === "membership" ? 250 : amount;
+    const membershipPrice = Number(process.env.ETHIO_TRANSPORT_MEMBERSHIP_PRICE_ETB || "250");
+    const finalAmount = purpose === "membership" ? membershipPrice : amount;
     if (!Number.isFinite(finalAmount) || finalAmount <= 0 || finalAmount > 1000000) {
       return NextResponse.json({ error: "Invalid payment amount." }, { status: 400 });
+    }
+
+    if (purpose === "membership" && (!Number.isFinite(membershipPrice) || membershipPrice <= 0)) {
+      return NextResponse.json({ error: "Membership pricing is not configured." }, { status: 503 });
+    }
+
+    const existing = await supabaseRest<Array<Record<string,unknown>>>(
+      "payment_transactions?select=id,status,amount,metadata&customer_ref=eq." + encodeURIComponent(customerRef) +
+      "&purpose=eq." + purpose + "&status=in.(pending,processing)&expires_at=gt." + encodeURIComponent(new Date().toISOString()) +
+      "&order=created_at.desc&limit=1"
+    );
+    if (existing?.[0]?.id) {
+      return NextResponse.json({
+        transactionId: existing[0].id,
+        provider,
+        status: existing[0].status,
+        message: "An active payment transaction already exists for this customer."
+      });
     }
 
     const orderId = ("ET" + Date.now() + crypto.randomBytes(4).toString("hex")).slice(0,32);
