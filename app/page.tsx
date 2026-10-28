@@ -243,7 +243,7 @@ export default function Home(){
     const row=d.fares?.[0];
     if(!row){
       setFareRate("");
-      setStatus(lang==="am"?"የታሪፍ ቁጥር ከመፍጠር ይልቅ ኦፊሴላዊ ምንጮች በቀጥታ ተፈትሸዋል። በኦፊሴላዊው ምንጭ ላይ የታተመ የአሁኑ የታሪፍ ሰንጠረዥ ካልተገኘ ታሪፍ አይገመትም።":lang==="en"?"Official transport sources were checked live. If the responsible authority has not published a current machine-readable fare table, ETHIO TRANSPORT will not invent or estimate the fare.":"Maddaalee geejjibaa mootummaa kallattiidhaan sakatta'aman. Yoo qaamni aangoo qabu gabatee kaffaltii yeroo ammaa hin maxxansin, ETHIO TRANSPORT kaffaltii hin tilmaamu.");
+      setStatus(lang==="am"?"የቆየ ታሪፍ እንደ አሁን እንዳይታይ ምንጮች በቀጥታ ተፈትሸዋል። የአሁኑ ታሪፍ በቅርብ ጊዜ በተረጋገጠ ወይም በተፈጻሚ ምንጭ ካልተገኘ ታሪፍ አይገመትም።":lang==="en"?"Official transport sources were checked live. ETHIO TRANSPORT shows only a current fare that has a recent effective/verification basis. Older reports are excluded from the current result; if no current fare is published or verified, ETHIO TRANSPORT will not invent or estimate it.":"Maddaalee geejjibaa mootummaa kallattiidhaan sakatta'aman. Yoo qaamni aangoo qabu gabatee kaffaltii yeroo ammaa hin maxxansin, ETHIO TRANSPORT kaffaltii hin tilmaamu.");
       return;
     }
     setFareRow(row);
