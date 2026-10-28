@@ -340,6 +340,29 @@ export async function GET(request: NextRequest) {
   if (!["bus", "taxi", "rail", "other"].includes(serviceType)) {
     return json({ error: "Unsupported service type." }, 400);
   }
+
+  // A fare band must never be selected when the requested trip distance is
+  // unknown. Otherwise an origin/destination lookup that times out could
+  // incorrectly return a short-distance fare for a much longer trip.
+  if (distanceKm === null && origin && destination) {
+    return json({
+      error: "Road distance could not be calculated for this trip. No fare was selected. Retry route lookup or enter the road distance in kilometres.",
+      source: "no-current-fare",
+      distanceKm: null,
+    }, 503);
+  }
+  if (distanceKm === null && Boolean(origin) !== Boolean(destination)) {
+    return json({
+      error: "Enter both origin and destination, or provide the trip distance in kilometres.",
+      source: "no-current-fare",
+    }, 400);
+  }
+  if (distanceKm === null && !origin && !destination) {
+    return json({
+      error: "Enter origin and destination, or provide the trip distance in kilometres to find an applicable fare.",
+      source: "no-current-fare",
+    }, 400);
+  }
   if (distanceKm !== null && (!Number.isFinite(distanceKm) || distanceKm < 0 || distanceKm > 5000)) {
     return json({ error: "Distance must be a valid value from 0 to 5000 km." }, 400);
   }
