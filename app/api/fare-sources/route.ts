@@ -33,7 +33,7 @@ function countFareTables(html: string) {
   let fareRows = 0;
   for (const table of tables) {
     const text = htmlText(table).toLowerCase();
-    if (/(fare|tariff|ታሪፍ|ክፍያ|km|kilometer|ኪ\\.?ሜ)/i.test(text)) {
+    if (/(fare|tariff|ታሪፍ|ክፍያ|km|kilometer|ኪ\.?ሜ)/i.test(text)) {
       fareRows += (table.match(/<tr\b/gi) || []).length;
     }
   }
