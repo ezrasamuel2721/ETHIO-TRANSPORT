@@ -30,7 +30,12 @@ export async function POST(request: Request){
       notes:text(body?.notes, 1000)
     };
     if(!supabaseUrl || !supabaseKey){
-      return NextResponse.json({ok:true,persisted:false,reference:record.reference});
+      return NextResponse.json({
+        ok:false,
+        persisted:false,
+        reference:record.reference,
+        error:"Trip-proof storage is not configured; the trip was not registered on the server. Save it locally and retry later."
+      },{status:503});
     }
     const r=await fetch(`${supabaseUrl}/rest/v1/trip_proofs`,{
       method:"POST",
