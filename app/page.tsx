@@ -236,6 +236,8 @@ export default function Home(){
     if(fareArea.trim())params.set("area",fareArea.trim());
     if(fareCategory.trim())params.set("vehicleCategory",fareCategory.trim());
     if(fareKm.trim())params.set("distanceKm",fareKm.trim());
+    if(origin.trim())params.set("origin",origin.trim());
+    if(destination.trim())params.set("destination",destination.trim());
     const r=await fetch("/api/fares?"+params.toString(),{cache:"no-store"});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Fare service unavailable.");
