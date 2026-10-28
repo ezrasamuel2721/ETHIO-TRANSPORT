@@ -71,7 +71,7 @@ async function checkSource(source: Source): Promise<SourceCheck> {
     if (!response.ok) return { ...source, checkedAt, reachable: false, discoveredTables: 0, discoveredFareRows: 0 };
     const html = await response.text();
     const counts = countFareTables(html);
-    return { ...source, checkedAt, reachable: true, ...counts };
+    return { ...source, checkedAt, reachable: true, discoveredTables: counts.tables, discoveredFareRows: counts.fareRows };
   } catch {
     return { ...source, checkedAt, reachable: false, discoveredTables: 0, discoveredFareRows: 0 };
   }
