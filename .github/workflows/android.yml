@@ -3,6 +3,8 @@ name: Android build
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - "android/**"
       - ".github/workflows/android.yml"
@@ -10,28 +12,28 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: android
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10"
-
       - name: Decode release keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -42,7 +44,6 @@ jobs:
           else
             echo "No release keystore configured; building an unsigned release bundle for CI verification."
           fi
-
       - name: Build release bundle
         env:
           ANDROID_KEYSTORE_PATH: /tmp/ethio-transport-release.jks
@@ -50,13 +51,10 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle --no-daemon :app:bundleRelease
-
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
-
       - name: Verify release bundle
         run: test -s app/build/outputs/bundle/release/app-release.aab
-
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
