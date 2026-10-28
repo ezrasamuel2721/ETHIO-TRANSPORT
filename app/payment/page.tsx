@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 
-type Provider = { code:string; name:string; checkout_mode:string; capabilities:Record<string,boolean> };
+type Provider = { code:string; name:string; checkout_mode:string; capabilities:Record<string,boolean>; configured?:boolean };
 
 function getCustomerRef() {
   const key = "ethio_transport_customer_ref";
@@ -57,6 +57,11 @@ export default function PaymentPage() {
   useEffect(() => { if (purpose === "membership") setAmount(250); },[purpose]);
 
   async function pay() {
+    const selectedProvider = providers.find(p=>p.code===provider);
+    if (!selectedProvider?.configured) {
+      setMessage("ይህ የክፍያ አቅራቢ ለምርት ገና አልተዋቀረም።");
+      return;
+    }
     setBusy(true); setMessage("");
     try {
       const response = await fetch("/api/payments/create", {
@@ -95,9 +100,9 @@ export default function PaymentPage() {
         </div>
         <h3 style={{marginBottom:10}}>የክፍያ መንገድ</h3>
         <div style={{display:"grid",gap:10}}>
-          {providers.map(p=><button key={p.code} onClick={()=>setProvider(p.code)} style={providerCard(provider===p.code)}>
+          {providers.map(p=><button key={p.code} disabled={!p.configured} onClick={()=>p.configured&&setProvider(p.code)} style={{...providerCard(provider===p.code),opacity:p.configured?1:.55,cursor:p.configured?"pointer":"not-allowed"}}>
             <span style={{fontSize:22}}>{p.code==="telebirr"?"📱":p.code==="card"?"💳":"🏦"}</span>
-            <span style={{textAlign:"left"}}><b>{p.name}</b><small style={{display:"block",opacity:.7}}>{p.checkout_mode==="native"?"App / native checkout":"Online checkout"}</small></span>
+            <span style={{textAlign:"left"}}><b>{p.name}</b><small style={{display:"block",opacity:.7}}>{p.configured?(p.checkout_mode==="native"?"App / native checkout":"Online checkout"):"ለምርት ገና አልተዋቀረም"}</small></span>
             <span style={{marginLeft:"auto"}}>{provider===p.code?"✓":""}</span>
           </button>)}
         </div>
