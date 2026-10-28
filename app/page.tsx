@@ -175,6 +175,7 @@ async function flushQueuedActions(){if(!navigator.onLine)return;const current=lo
 
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0), [cardVisualIndex,setCardVisualIndex]=useState(0);
+ const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
  const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false),[fareRegions,setFareRegions]=useState<any[]>([]),[fareRegion,setFareRegion]=useState(""),[fareCity,setFareCity]=useState(""),[fareArea,setFareArea]=useState(""),[fareRow,setFareRow]=useState<any>(null),[fareSources,setFareSources]=useState<any[]>([]),[fareSourcesLoading,setFareSourcesLoading]=useState(false),[fareLiveInfo,setFareLiveInfo]=useState<any[]>([]);
  const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
@@ -187,7 +188,24 @@ export default function Home(){
  const ticketItems=ticketProviders.length?ticketProviders.map(p=>{const base=ticketPlatforms.find(x=>x.name===p.name)||ticketPlatforms[0];return {name:p.name,meta:p.source_id?.organization_name||"Verified provider",url:p.booking_url,image:base.image}}):ticketPlatforms;
  const operatorItems=operatorProviders.length?operatorProviders.map((p,i)=>{const base=operators.find(x=>x[0]===p.name)||operators[i%operators.length];return {name:p.name,image:base?.[1]||operators[0][1],url:p.booking_url,source:p.source_id?.organization_name||"Verified source"}}):operators.map(([name,image])=>({name,image,url:"https://i-ticket.et/",source:"Ticket directory"}));
 
- useEffect(()=>{setLang(load<Lang>("ethio_transport_lang","am"));setSavedTrips(load("ethio_transport_trips",[]));flushQueuedActions();const onOnline=()=>flushQueuedActions();window.addEventListener("online",onOnline);return()=>window.removeEventListener("online",onOnline)},[]);
+ useEffect(()=>{
+   setLang(load<Lang>("ethio_transport_lang","am"));
+   setSavedTrips(load("ethio_transport_trips",[]));
+   flushQueuedActions();
+   const onOnline=()=>flushQueuedActions();
+   window.addEventListener("online",onOnline);
+   return()=>window.removeEventListener("online",onOnline);
+ },[]);
+ useEffect(()=>{
+   const key="ethio_transport_customer_ref";
+   let customerRef=localStorage.getItem(key);
+   if(!customerRef){customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");localStorage.setItem(key,customerRef);}
+   fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef),{cache:"no-store"})
+     .then(r=>r.ok?r.json():null)
+     .then(d=>setMembershipActive(Boolean(d?.active)))
+     .catch(()=>setMembershipActive(false))
+     .finally(()=>setMembershipChecked(true));
+ },[]);
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
  useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%3),5200);return()=>window.clearInterval(id)},[]);
  useEffect(()=>save("ethio_transport_lang",lang),[lang]);
@@ -238,6 +256,26 @@ export default function Home(){
  function saveAccess(){save("ethio_transport_accessibility",{need:accessNeed,savedAt:new Date().toISOString()});setStatus(L.saved)}
  function saveParcel(){if(!parcel.from||!parcel.to||!parcel.description){setStatus("Complete the form first.");return}save("ethio_transport_parcel",parcel);setStatus(L.saved)}
 
+ if(!membershipChecked){
+   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
+     <section className="modal" style={{maxWidth:520,width:"100%",position:"static",transform:"none"}}>
+       <div className="modal-content"><h2>ETHIO TRANSPORT</h2><p>የአገልግሎት ሁኔታ እየተረጋገጠ ነው…</p></div>
+     </section>
+   </main>;
+ }
+ if(!membershipActive){
+   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
+     <section className="modal" style={{maxWidth:620,width:"100%",position:"static",transform:"none"}}>
+       <div className="modal-content" style={{padding:32,textAlign:"center"}}>
+         <div className="eyebrow dark">ETHIO TRANSPORT • SECURE SERVICE</div>
+         <h1>የአገልግሎት ምዝገባ</h1>
+         <p>ETHIO TRANSPORT ሙሉ አገልግሎቱን ለ1 ዓመት በ250 ETB ይከፍታል። ክፍያዎ ከተረጋገጠ በኋላ የአፑ አገልግሎቶች ይከፈታሉ።</p>
+         <a className="primary" href="/payment" style={{display:"inline-block",textDecoration:"none",padding:"14px 22px",borderRadius:12,fontWeight:800}}>🔐 250 ETB / 1 ዓመት ክፍያ</a>
+         <p style={{fontSize:12,opacity:.65,marginTop:18}}>ክፍያ እስኪረጋገጥ ድረስ ምንም የሐሰት ማረጋገጫ አይሰጥም።</p>
+       </div>
+     </section>
+   </main>;
+ }
  return <main className="app">
   <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}>{LANG_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></header>
 
