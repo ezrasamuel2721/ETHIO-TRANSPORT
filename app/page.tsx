@@ -175,7 +175,7 @@ async function flushQueuedActions(){if(!navigator.onLine)return;const current=lo
 
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0), [cardVisualIndex,setCardVisualIndex]=useState(0);
- const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false);
+ const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[customerRef,setCustomerRef]=useState("");
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
  const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false),[fareRegions,setFareRegions]=useState<any[]>([]),[fareRegion,setFareRegion]=useState(""),[fareCity,setFareCity]=useState(""),[fareArea,setFareArea]=useState(""),[fareRow,setFareRow]=useState<any>(null),[fareSources,setFareSources]=useState<any[]>([]),[fareSourcesLoading,setFareSourcesLoading]=useState(false),[fareLiveInfo,setFareLiveInfo]=useState<any[]>([]);
  const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
@@ -200,6 +200,7 @@ export default function Home(){
    const key="ethio_transport_customer_ref";
    let customerRef=localStorage.getItem(key);
    if(!customerRef){customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");localStorage.setItem(key,customerRef);}
+   setCustomerRef(customerRef);
    fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef),{cache:"no-store"})
      .then(r=>r.ok?r.json():null)
      .then(d=>setMembershipActive(Boolean(d?.active)))
@@ -271,7 +272,7 @@ export default function Home(){
          <h1>የአገልግሎት ምዝገባ</h1>
          <p>ETHIO TRANSPORT ሙሉ አገልግሎቱን ለ1 ዓመት በ250 ETB ይከፍታል። ክፍያዎ ከተረጋገጠ በኋላ የአፑ አገልግሎቶች ይከፈታሉ።</p>
          <a className="primary" href="/payment" style={{display:"inline-block",textDecoration:"none",padding:"14px 22px",borderRadius:12,fontWeight:800}}>🔐 250 ETB / 1 ዓመት ክፍያ</a>
-         <p style={{fontSize:12,opacity:.65,marginTop:18}}>ክፍያ እስኪረጋገጥ ድረስ ምንም የሐሰት ማረጋገጫ አይሰጥም።</p>
+         <p style={{fontSize:12,opacity:.65,marginTop:18}}>ክፍያ እስኪረጋገጥ ድረስ ምንም የሐሰት ማረጋገጫ አይሰጥም።</p>\n         <p style={{fontSize:11,opacity:.45,marginTop:10,wordBreak:"break-all"}}>የመሳሪያ መለያ: {customerRef}</p>
        </div>
      </section>
    </main>;
