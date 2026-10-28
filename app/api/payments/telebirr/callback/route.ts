@@ -14,17 +14,49 @@ export async function POST(request: NextRequest) {
     if (!orderId) return NextResponse.json({ ok:false, error:"Missing merchant order id." }, { status:400 });
 
     const rows = await supabaseRest<Array<Record<string,unknown>>>(
-      "payment_transactions?select=id,amount,status,provider_code,purpose,customer_ref,metadata&metadata->>order_id=eq." + encodeURIComponent(orderId) + "&limit=1"
+      "payment_transactions?select=id,amount,currency,status,provider_code,purpose,customer_ref,metadata,expires_at&metadata->>order_id=eq." + encodeURIComponent(orderId) + "&limit=1"
     );
     const tx = rows?.[0];
     if (!tx?.id) return NextResponse.json({ ok:false, error:"Unknown order." }, { status:404 });
 
     if (!verifyTelebirrNotification(payload)) {
-      await supabaseRest("payment_transactions?id=eq." + tx.id, {
-        method:"PATCH", headers:{Prefer:"return=minimal"},
-        body:JSON.stringify({ metadata:{...(tx.metadata as object || {}), callback_rejected:"invalid_signature"} })
-      });
+      // An unauthenticated callback must not be allowed to mutate a transaction,
+      // even just its metadata. Keep rejection side-effect free.
       return NextResponse.json({ ok:false, error:"Invalid provider notification signature." }, { status:401 });
+    }
+
+    if (tx.provider_code !== "telebirr") {
+      return NextResponse.json({ ok:false, error:"Callback provider does not match the transaction." }, { status:409 });
+    }
+    if (tx.status === "paid") {
+      return NextResponse.json({ ok:true, status:"already_paid" });
+    }
+    if (tx.status === "failed" || tx.status === "expired") {
+      return NextResponse.json({ ok:false, error:"This payment transaction is no longer payable." }, { status:409 });
+    }
+    if (tx.expires_at && Date.parse(String(tx.expires_at)) <= Date.now()) {
+      await supabaseRest("payment_transactions?id=eq." + tx.id + "&status=in.(pending,processing)", {
+        method:"PATCH", headers:{Prefer:"return=minimal"},
+        body:JSON.stringify({ status:"expired" })
+      });
+      return NextResponse.json({ ok:false, error:"Payment transaction expired. Start a new payment if you were not charged." }, { status:410 });
+    }
+
+    const callbackAmount = payload?.total_amount ?? payload?.totalAmount ??
+      payload?.amount ?? payload?.biz_content?.total_amount ?? payload?.biz_content?.totalAmount ??
+      payload?.biz_content?.amount;
+    if (callbackAmount !== undefined && callbackAmount !== null && callbackAmount !== "") {
+      const receivedCents = Math.round(Number(callbackAmount) * 100);
+      const expectedCents = Math.round(Number(tx.amount) * 100);
+      if (!Number.isFinite(receivedCents) || receivedCents !== expectedCents) {
+        return NextResponse.json({ ok:false, error:"Provider amount does not match the recorded order." }, { status:409 });
+      }
+    }
+
+    const callbackCurrency = payload?.trans_currency ?? payload?.currency ??
+      payload?.biz_content?.trans_currency ?? payload?.biz_content?.currency;
+    if (callbackCurrency != null && String(callbackCurrency).trim().toUpperCase() !== String(tx.currency || "ETB").trim().toUpperCase()) {
+      return NextResponse.json({ ok:false, error:"Provider currency does not match the recorded order." }, { status:409 });
     }
 
     if (failure) {
