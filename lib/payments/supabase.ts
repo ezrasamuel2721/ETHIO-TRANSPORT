@@ -3,13 +3,13 @@ const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export function requirePaymentDb() {
   if (!base || !key) throw new Error("Payment database is not configured.");
-  return { base: base.replace(/\\/$/, ""), key };
+  return { base: base.replace(/\/$/, ""), key };
 }
 
 export async function supabasePublicRest<T = unknown>(path: string) {
   const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
   if (!base || !publicKey) throw new Error("Supabase public API is not configured.");
-  const response = await fetch(base.replace(/\\/$/, "") + "/rest/v1/" + path, {
+  const response = await fetch(base.replace(/\/$/, "") + "/rest/v1/" + path, {
     headers: { apikey: publicKey, Authorization: "Bearer " + publicKey },
     cache: "no-store",
   });
