@@ -28,6 +28,7 @@ Keep these only in Vercel/server environment variables:
 - TELEBIRR_MERCHANT_CODE
 - TELEBIRR_FABRIC_APP_ID
 - TELEBIRR_PRIVATE_KEY
+- TELEBIRR_PUBLIC_KEY
 - TELEBIRR_NOTIFY_URL
 - TELEBIRR_REDIRECT_URL
 
@@ -47,5 +48,18 @@ ad_campaigns supports hero, banner, card, video and sponsored-service placements
 2. Obtain production Telebirr credentials and payment-product permission.
 3. Add credentials only to Vercel server environment variables.
 4. Complete the native Android Telebirr SDK bridge for the Play Store build.
-5. Run sandbox/test transactions and verify callbacks/reconciliation.
-6. Enable production charging only after successful verification.
+5. Run sandbox/test transactions and verify signed callbacks/reconciliation.
+6. Confirm the 365-day membership entitlement is created only after verified payment.
+7. Complete the Android native SDK bridge for the Play Store wrapper and test on a real device.
+8. Enable production charging only after successful verification.
+
+
+## Current implementation status
+- Payment records are created server-side.
+- Duplicate pending/processing payment creation is blocked per customer and purpose.
+- Telebirr notifications are signature-checked before a successful payment can be finalized.
+- Finalization is idempotent and atomically activates/renews the 365-day membership entitlement.
+- The payment status endpoint exposes the verified entitlement to the app.
+- Unconfigured providers are shown as unavailable rather than pretending that payment works.
+- No secret credential is stored in the client.
+- Real-money charging remains disabled until the production merchant credentials and Telebirr public key are configured.
