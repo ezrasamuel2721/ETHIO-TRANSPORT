@@ -247,7 +247,7 @@ export default function Home(){
     }
     setFareRow(row);
     setFareRate(String(row.rate_per_km ?? ""));
-    setFareSource((row.source_id?.organization_name ? "Verified source: "+row.source_id.organization_name : "Verified fare record")+(row.source_id?.title ? " • "+row.source_id.title : ""));
+    setFareSource((/official/i.test(String(row.source_id?.verification_note||"")) ? "Verified official source: " : "Current reported source: ")+(row.source_id?.organization_name || "Fare record")+(row.source_id?.title ? " • "+row.source_id.title : "")+(row.source_id?.verification_note ? " • "+row.source_id.verification_note : ""));
     setStatus("");
    }catch(e:any){setStatus(e?.message||"Fare service unavailable.");}
    finally{setFareLoading(false);}
