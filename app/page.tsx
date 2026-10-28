@@ -175,7 +175,7 @@ async function flushQueuedActions(){if(!navigator.onLine)return;const current=lo
 
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0), [cardVisualIndex,setCardVisualIndex]=useState(0);
- const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[customerRef,setCustomerRef]=useState("");
+ const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[membershipCheckFailed,setMembershipCheckFailed]=useState(false),[customerRef,setCustomerRef]=useState("");
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
  const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false),[fareRegions,setFareRegions]=useState<any[]>([]),[fareRegion,setFareRegion]=useState(""),[fareCity,setFareCity]=useState(""),[fareArea,setFareArea]=useState(""),[fareCategory,setFareCategory]=useState(""),[fareRow,setFareRow]=useState<any>(null),[fareSources,setFareSources]=useState<any[]>([]),[fareSourcesLoading,setFareSourcesLoading]=useState(false),[fareLiveInfo,setFareLiveInfo]=useState<any[]>([]);
  const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
@@ -202,9 +202,16 @@ export default function Home(){
    if(!customerRef){customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");localStorage.setItem(key,customerRef);}
    setCustomerRef(customerRef);
    fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef),{cache:"no-store"})
-     .then(r=>r.ok?r.json():null)
-     .then(d=>setMembershipActive(Boolean(d?.active)))
-     .catch(()=>setMembershipActive(false))
+     .then(async r=>{
+       if(!r.ok){setMembershipCheckFailed(true);return null;}
+       return r.json();
+     })
+     .then(d=>{
+       if(!d || typeof d.active!=="boolean"){setMembershipCheckFailed(true);return;}
+       setMembershipCheckFailed(false);
+       setMembershipActive(d.active);
+     })
+     .catch(()=>setMembershipCheckFailed(true))
      .finally(()=>setMembershipChecked(true));
  },[]);
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
@@ -275,6 +282,19 @@ export default function Home(){
    return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
      <section className="modal" style={{maxWidth:520,width:"100%",position:"static",transform:"none"}}>
        <div className="modal-content"><h2>ETHIO TRANSPORT</h2><p>የአገልግሎት ሁኔታ እየተረጋገጠ ነው…</p></div>
+     </section>
+   </main>;
+ }
+ if(membershipCheckFailed){
+   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
+     <section className="modal" style={{maxWidth:620,width:"100%",position:"static",transform:"none"}}>
+       <div className="modal-content" style={{padding:32,textAlign:"center"}}>
+         <div className="eyebrow dark">ETHIO TRANSPORT • SERVICE STATUS</div>
+         <h1>የአገልግሎት ማረጋገጫ አልተሳካም</h1>
+         <p>የአባልነት ሁኔታ ከሰርቨር ማረጋገጥ አልተቻለም። ይህ ችግር እስኪፈታ ድረስ ክፍያ አትፈጽሙ። ከዚያ በኋላ እንደገና ሞክሩ።</p>
+         <p style={{opacity:.7,fontSize:13}}>Membership status could not be verified. Please do not make a payment until the service is available; try again after the issue is resolved.</p>
+         <button className="primary" onClick={()=>window.location.reload()} style={{marginTop:12,padding:"14px 22px",borderRadius:12,fontWeight:800}}>↻ እንደገና ሞክር / Retry</button>
+       </div>
      </section>
    </main>;
  }
