@@ -10,6 +10,17 @@ const CURRENT_REPORTED_SOURCE_MAX_AGE_MS = 120 * 24 * 60 * 60 * 1000;
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
 
+function isOfficialFareSource(source: Fare) {
+  try {
+    const host = new URL(String(source.source_url || "")).hostname.toLowerCase().replace(/^www\./, "");
+    return host.endsWith(".gov.et") ||
+      host === "anrstlob.et" || host.endsWith(".anrstlob.et") ||
+      host === "srsrb.org" || host.endsWith(".srsrb.org");
+  } catch {
+    return false;
+  }
+}
+
 function sourceIsCurrent(row: Fare) {
   const note = String(row.source_id?.verification_note || "");
   if (/^Official/i.test(note)) return true;
@@ -173,7 +184,10 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
   url.searchParams.set("status", "eq.active"); url.searchParams.set("limit", "100");
   const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store", signal: AbortSignal.timeout(7000) });
   if (!response.ok) return [];
-  const sources = (await response.json()).filter((s: Fare) => /transport|motl|sidamacomb/i.test(String(s.organization_name || "") + " " + String(s.source_url || "")));
+  const sources = (await response.json()).filter((s: Fare) =>
+    isOfficialFareSource(s) &&
+    /transport|motl|sidamacomb|road/i.test(String(s.organization_name || "") + " " + String(s.title || "") + " " + String(s.source_url || ""))
+  );
   const selected = selectOfficialSources(sources, regionCode, 6);
   const rows: Fare[] = [];
   for (const source of selected.slice(0, 6)) {
@@ -222,8 +236,8 @@ async function readLiveOfficialInfo(base: string, key: string, regionCode: strin
   });
   if (!response.ok) return [];
   const sources = (await response.json()).filter((s: Fare) => {
-    const text = String(s.organization_name || "") + " " + String(s.source_url || "");
-    return /transport|motl|sidamacomb|transportbureau/i.test(text);
+    const text = String(s.organization_name || "") + " " + String(s.title || "") + " " + String(s.source_url || "");
+    return isOfficialFareSource(s) && /transport|motl|sidamacomb|transportbureau|road/i.test(text);
   });
   const selected = selectOfficialSources(sources, regionCode, 4);
 
