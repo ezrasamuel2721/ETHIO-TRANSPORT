@@ -290,7 +290,10 @@ export async function GET(request: NextRequest) {
       });
       if (routeResponse.ok) {
         const route = await routeResponse.json();
-        if (Number.isFinite(Number(route?.distanceKm))) distanceKm = Number(route.distanceKm);
+        // A straight-line fallback is useful for orientation, but not for tariff matching.
+        if (route?.estimated !== true && Number.isFinite(Number(route?.distanceKm))) {
+          distanceKm = Number(route.distanceKm);
+        }
       }
     } catch {}
   }
@@ -344,7 +347,7 @@ export async function GET(request: NextRequest) {
       fares: ranked.slice(0, 20),
       verifiedFareRows: verifiedRows.length,
       reportedFareRows: reportedRows.length,
-      source: liveOfficialRows.length ? "live-official-source-and-verified-database" : verifiedRows.length ? "verified-database" : reportedRows.length ? "reported-current-source" : authorizedRows.length ? "authorized-provider" : "verified-database",
+      source: verifiedRows.length ? "verified-database" : reportedRows.length ? "reported-current-source" : ranked.length ? "authorized-provider" : "no-current-fare",
       liveOfficialRows: liveOfficialRows.length,
       liveOfficialInfo,
       checkedAt: new Date().toISOString(),
