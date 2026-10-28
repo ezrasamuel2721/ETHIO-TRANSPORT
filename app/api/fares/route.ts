@@ -50,7 +50,7 @@ async function readDatabaseFares(base: string, key: string, serviceType: string)
   if (cached && cached.expires > Date.now()) return cached.rows;
 
   const url = new URL("/rest/v1/transport_fares", base);
-  url.searchParams.set("select", "id,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,effective_from,effective_to,status,region_code,region_name,city_name,area_name,fare_scope,distance_min_km,distance_max_km,passenger_type,notes,source_id(id,organization_name,source_url,title,published_at,effective_from,status)");
+  url.searchParams.set("select", "id,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,effective_from,effective_to,status,region_code,region_name,city_name,area_name,fare_scope,distance_min_km,distance_max_km,passenger_type,notes,source_id(id,organization_name,source_url,title,published_at,effective_from,status,verification_note)");
   url.searchParams.set("service_type", `eq.${serviceType}`);
   url.searchParams.set("status", "eq.active");
   url.searchParams.set("order", "effective_from.desc");
@@ -291,6 +291,9 @@ export async function GET(request: NextRequest) {
       )
       .map(x => x.row);
 
+    const verifiedRows = ranked.filter(row => /official/i.test(String(row.source_id?.verification_note || "")));
+    const reportedRows = ranked.filter(row => !/official/i.test(String(row.source_id?.verification_note || "")));
+
     return json({
       serviceType,
       regionCode: regionCode || null,
@@ -298,7 +301,9 @@ export async function GET(request: NextRequest) {
       area: area || null,
       distanceKm,
       fares: ranked.slice(0, 20),
-      source: liveOfficialRows.length ? "live-official-source-and-verified-database" : authorizedRows.length ? "verified-database-and-authorized-provider" : "verified-database",
+      verifiedFareRows: verifiedRows.length,
+      reportedFareRows: reportedRows.length,
+      source: liveOfficialRows.length ? "live-official-source-and-verified-database" : verifiedRows.length ? "verified-database" : reportedRows.length ? "reported-current-source" : authorizedRows.length ? "authorized-provider" : "verified-database",
       liveOfficialRows: liveOfficialRows.length,
       liveOfficialInfo,
       checkedAt: new Date().toISOString(),
