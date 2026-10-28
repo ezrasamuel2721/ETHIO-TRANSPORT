@@ -5,9 +5,19 @@ type CacheEntry = { expires: number; rows: Fare[] };
 const memoryCache = new Map<string, CacheEntry>();
 const CACHE_MS = 30_000;
 const MAX_DB_ROWS = 500;
+const CURRENT_REPORTED_SOURCE_MAX_AGE_MS = 120 * 24 * 60 * 60 * 1000;
 
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
+
+function sourceIsCurrent(row: Fare) {
+  const note = String(row.source_id?.verification_note || "");
+  if (/^Official/i.test(note)) return true;
+  const published = row.source_id?.published_at ? Date.parse(row.source_id.published_at) : NaN;
+  const effective = row.effective_from ? Date.parse(row.effective_from) : NaN;
+  const anchor = Number.isFinite(published) ? published : effective;
+  return Number.isFinite(anchor) && Date.now() - anchor <= CURRENT_REPORTED_SOURCE_MAX_AGE_MS;
+}
 
 function activeNow(row: Fare) {
   const now = Date.now();
@@ -286,7 +296,7 @@ export async function GET(request: NextRequest) {
       readLiveOfficialInfo(base, key, regionCode, serviceType),
     ]);
 
-    const candidates = [...databaseRows, ...authorizedRows].filter(activeNow);
+    const candidates = [...databaseRows, ...authorizedRows].filter(activeNow).filter(row => authorizedRows.includes(row) || sourceIsCurrent(row));
     const ranked = candidates
       .map(row => ({ row, score: score(row, regionCode, city, area, distanceKm, vehicleCategory) }))
       .filter(x => x.score >= 0)
