@@ -7,6 +7,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const purpose = body?.purpose === "bus_ticket" ? "bus_ticket" : "membership";
+    // Never accept a client-entered amount for a ticket. Ticket checkout must
+    // be backed by a confirmed operator order and server-verified ticket price.
+    if (purpose === "bus_ticket") {
+      return NextResponse.json({
+        error: "Bus-ticket payments are not enabled until a confirmed operator order and server-verified ticket price are connected."
+      }, { status: 409 });
+    }
     const provider = String(body?.provider || "").trim();
     const customerRef = String(body?.customerRef || "").trim();
     const amount = Number(body?.amount);
