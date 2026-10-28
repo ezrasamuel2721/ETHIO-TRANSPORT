@@ -137,6 +137,36 @@ async function collectOfficialPages(startUrl: string, maxPages = 8) {
   return pages;
 }
 
+const REGION_NAME_PATTERN: Record<string, RegExp> = {
+  AA: /addis ababa|transportbureau|aatb/i,
+  DD: /dire dawa/i,
+  AF: /afar/i,
+  AM: /amhara/i,
+  BE: /benishangul|gumuz/i,
+  CE: /central ethiopia/i,
+  GA: /gambella/i,
+  HA: /harari/i,
+  OR: /oromia/i,
+  SD: /sidama|sidamacomb/i,
+  SO: /somali/i,
+  SE: /south ethiopia/i,
+  SW: /south west ethiopia|southwest/i,
+  TG: /tigray/i,
+};
+
+function selectOfficialSources(sources: Fare[], regionCode: string, limit: number) {
+  const textOf = (source: Fare) => String(source.organization_name || "") + " " + String(source.title || "") + " " + String(source.source_url || "");
+  const federal = sources.filter(source => /motl\.gov\.et/i.test(String(source.source_url || "")));
+  const pattern = REGION_NAME_PATTERN[regionCode];
+  const regional = regionCode
+    ? sources.filter(source => Boolean(pattern && pattern.test(textOf(source))))
+    : sources.filter(source => Object.values(REGION_NAME_PATTERN).some(pattern => pattern.test(textOf(source))));
+  const selected = [...regional, ...federal];
+  return selected.filter((source, index) => {
+    return selected.findIndex(other => String(other.source_url || "") === String(source.source_url || "")) === index;
+  }).slice(0, limit);
+}
+
 async function readLiveOfficialFares(base: string, key: string, regionCode: string) {
   const url = new URL("/rest/v1/transport_sources", base);
   url.searchParams.set("select", "id,organization_name,source_url,title,status,verification_note");
@@ -144,9 +174,7 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
   const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store", signal: AbortSignal.timeout(7000) });
   if (!response.ok) return [];
   const sources = (await response.json()).filter((s: Fare) => /transport|motl|sidamacomb/i.test(String(s.organization_name || "") + " " + String(s.source_url || "")));
-  const selected = regionCode === "AA"
-    ? sources.filter((s: Fare) => /transportbureau/i.test(String(s.source_url || "")) || /addis ababa/i.test(String(s.organization_name || "")))
-    : sources.filter((s: Fare) => /motl|sidamacomb/i.test(String(s.source_url || "")));
+  const selected = selectOfficialSources(sources, regionCode, 6);
   const rows: Fare[] = [];
   for (const source of selected.slice(0, 6)) {
     const pages = await collectOfficialPages(source.source_url, 8);
@@ -197,10 +225,7 @@ async function readLiveOfficialInfo(base: string, key: string, regionCode: strin
     const text = String(s.organization_name || "") + " " + String(s.source_url || "");
     return /transport|motl|sidamacomb|transportbureau/i.test(text);
   });
-  const selected = (regionCode === "AA"
-    ? sources.filter((s: Fare) => /transportbureau/i.test(String(s.source_url || "")) || /addis ababa/i.test(String(s.organization_name || "")))
-    : sources.filter((s: Fare) => /motl|sidamacomb/i.test(String(s.source_url || "")))
-  ).slice(0, 4);
+  const selected = selectOfficialSources(sources, regionCode, 4);
 
   const results: Fare[] = [];
   for (const source of selected) {
