@@ -19,22 +19,22 @@ let cache: { expires: number; sources: SourceCheck[] } | null = null;
 
 function htmlText(value: string) {
   return value
-    .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
-    .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function countFareTables(html: string) {
-  const tables = html.match(/<table\\b[\\s\\S]*?<\\/table>/gi) || [];
+  const tables = html.match(/<table\b[\s\S]*?<\/table>/gi) || [];
   let fareRows = 0;
   for (const table of tables) {
     const text = htmlText(table).toLowerCase();
     if (/(fare|tariff|ታሪፍ|ክፍያ|km|kilometer|ኪ\\.?ሜ)/i.test(text)) {
-      fareRows += (table.match(/<tr\\b/gi) || []).length;
+      fareRows += (table.match(/<tr\b/gi) || []).length;
     }
   }
   return { tables: tables.length, fareRows };
