@@ -106,34 +106,52 @@ function inferService(text: string) {
   return null;
 }
 
+async function collectOfficialPages(startUrl: string, maxPages = 8) {
+  const start = new URL(startUrl);
+  const queue = [start.href];
+  const seen = new Set<string>();
+  const pages: { url: string; html: string }[] = [];
+  while (queue.length && pages.length < maxPages) {
+    const current = queue.shift()!;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    try {
+      const page = await fetch(current, {
+        headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "ETHIO-TRANSPORT/1.0 (+live-source)" },
+        redirect: "follow", cache: "no-store", signal: AbortSignal.timeout(5000),
+      });
+      if (!page.ok) continue;
+      const html = await page.text();
+      pages.push({ url: page.url || current, html });
+      const links = [...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi)].map(m => m[1]).filter(Boolean);
+      for (const href of links) {
+        try {
+          const u = new URL(href, page.url || current);
+          if (!/^https?:$/.test(u.protocol) || u.host !== start.host) continue;
+          if (/\.(pdf|docx?|xlsx?|zip)(\?|$)/i.test(u.pathname)) continue;
+          if (/(fare|tariff|transport|publication|news|resource|directive|law|service)/i.test(u.href) && !seen.has(u.href) && !queue.includes(u.href)) queue.push(u.href);
+        } catch {}
+      }
+    } catch {}
+  }
+  return pages;
+}
+
 async function readLiveOfficialFares(base: string, key: string, regionCode: string) {
   const url = new URL("/rest/v1/transport_sources", base);
-  url.searchParams.set("select", "id,organization_name,source_url,title,status");
-  url.searchParams.set("status", "eq.active");
-  url.searchParams.set("limit", "100");
-  const response = await fetch(url, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
-    cache: "no-store",
-    signal: AbortSignal.timeout(7000),
-  });
+  url.searchParams.set("select", "id,organization_name,source_url,title,status,verification_note");
+  url.searchParams.set("status", "eq.active"); url.searchParams.set("limit", "100");
+  const response = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store", signal: AbortSignal.timeout(7000) });
   if (!response.ok) return [];
-  const sources = (await response.json()).filter((s: Fare) =>
-    /transport|motl|sidamacomb/i.test(String(s.organization_name || "") + " " + String(s.source_url || ""))
-  );
+  const sources = (await response.json()).filter((s: Fare) => /transport|motl|sidamacomb/i.test(String(s.organization_name || "") + " " + String(s.source_url || "")));
   const selected = regionCode === "AA"
     ? sources.filter((s: Fare) => /transportbureau/i.test(String(s.source_url || "")) || /addis ababa/i.test(String(s.organization_name || "")))
     : sources.filter((s: Fare) => /motl|sidamacomb/i.test(String(s.source_url || "")));
   const rows: Fare[] = [];
   for (const source of selected.slice(0, 6)) {
-    try {
-      const page = await fetch(source.source_url, {
-        headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "ETHIO-TRANSPORT/1.0" },
-        cache: "no-store",
-        signal: AbortSignal.timeout(5000),
-      });
-      if (!page.ok) continue;
-      const html = await page.text();
-      const tables = html.match(/<table\b[\s\S]*?<\/table>/gi) || [];
+    const pages = await collectOfficialPages(source.source_url, 8);
+    for (const pageData of pages) {
+      const tables = pageData.html.match(/<table\b[\s\S]*?<\/table>/gi) || [];
       for (const table of tables) {
         const plain = stripHtml(table);
         if (!/(fare|tariff|ታሪፍ|ክፍያ)/i.test(plain) || !/(km|kilometer|ኪ\.?ሜ)/i.test(plain)) continue;
@@ -143,37 +161,23 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
         for (const tr of trs) {
           const cells = (tr.match(/<(?:td|th)\b[\s\S]*?<\/(?:td|th)>/gi) || []).map(stripHtml);
           if (cells.length < 2) continue;
-          const rowText = cells.join(" ");
-          const ns = numbers(rowText);
-          if (ns.length < 2) continue;
-          const fare = ns[ns.length - 1];
-          if (!(fare > 0 && fare < 100000)) continue;
+          const rowText = cells.join(" "); const ns = numbers(rowText); if (ns.length < 2) continue;
+          const fare = ns[ns.length - 1]; if (!(fare > 0 && fare < 100000)) continue;
           const range = rowText.match(/(\d+(?:[.,]\d+)?)\s*(?:-|–|—|to)\s*(\d+(?:[.,]\d+)?)/i);
-          const min = range ? Number(range[1].replace(",", ".")) : null;
-          const max = range ? Number(range[2].replace(",", ".")) : null;
           rows.push({
-            service_type: serviceType,
-            vehicle_category: cells.slice(0, 2).join(" / ").slice(0, 160),
+            service_type: serviceType, vehicle_category: cells.slice(0, 2).join(" / ").slice(0, 160),
             fixed_fare: range ? null : fare,
-            distance_min_km: min,
-            distance_max_km: max,
-            currency: "ETB",
-            status: "active",
-            effective_from: null,
-            effective_to: null,
-            fare_scope: regionCode === "AA" ? "city" : "regional",
-            region_code: regionCode || null,
+            distance_min_km: range ? Number(range[1].replace(",", ".")) : null,
+            distance_max_km: range ? Number(range[2].replace(",", ".")) : null,
+            currency: "ETB", status: "active", effective_from: null, effective_to: null,
+            fare_scope: regionCode === "AA" ? "city" : "regional", region_code: regionCode || null,
             region_name: regionCode === "AA" ? "Addis Ababa" : null,
-            source_id: {
-              id: source.id,
-              organization_name: source.organization_name,
-              source_url: source.source_url,
-              title: source.title || "Official live source",
-            },
+            source_id: { id: source.id, organization_name: source.organization_name, source_url: pageData.url,
+              title: source.title || "Official live source", verification_note: source.verification_note || "Official live source page." },
           });
         }
       }
-    } catch {}
+    }
   }
   return rows;
 }
