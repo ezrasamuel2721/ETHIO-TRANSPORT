@@ -274,7 +274,26 @@ export async function GET(request: NextRequest) {
   const area = (params.get("area") || "").trim();
   const vehicleCategory = (params.get("vehicleCategory") || "").trim();
   const distanceRaw = (params.get("distanceKm") || "").trim();
-  const distanceKm = distanceRaw === "" ? null : Number(distanceRaw);
+  const origin = (params.get("origin") || "").trim();
+  const destination = (params.get("destination") || "").trim();
+  let distanceKm = distanceRaw === "" ? null : Number(distanceRaw);
+
+  if (distanceKm === null && origin && destination) {
+    try {
+      const routeUrl = new URL("/api/routes", request.url);
+      routeUrl.searchParams.set("origin", origin);
+      routeUrl.searchParams.set("destination", destination);
+      const routeResponse = await fetch(routeUrl, {
+        headers: { Accept: "application/json", "User-Agent": "ETHIO-TRANSPORT/1.0" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(7000),
+      });
+      if (routeResponse.ok) {
+        const route = await routeResponse.json();
+        if (Number.isFinite(Number(route?.distanceKm))) distanceKm = Number(route.distanceKm);
+      }
+    } catch {}
+  }
 
   if (!["bus", "taxi", "rail", "other"].includes(serviceType)) {
     return json({ error: "Unsupported service type." }, 400);
@@ -318,6 +337,8 @@ export async function GET(request: NextRequest) {
       regionCode: regionCode || null,
       city: city || null,
       area: area || null,
+      origin: origin || null,
+      destination: destination || null,
       vehicleCategory: vehicleCategory || null,
       distanceKm,
       fares: ranked.slice(0, 20),
