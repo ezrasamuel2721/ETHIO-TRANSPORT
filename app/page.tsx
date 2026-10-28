@@ -242,6 +242,11 @@ export default function Home(){
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Fare service unavailable.");
     if(Array.isArray(d.liveOfficialInfo))setFareLiveInfo(d.liveOfficialInfo);
+    // Reflect the same routable distance the API used for matching fares.
+    // Don't populate it from straight-line fallbacks or unknown values.
+    if(!fareKm.trim() && d.distanceKm!=null && Number.isFinite(Number(d.distanceKm))){
+      setFareKm(Number(d.distanceKm).toFixed(2));
+    }
     const row=d.fares?.[0];
     if(!row){
       setFareRate("");
