@@ -44,6 +44,17 @@ function signRequest(body: Record<string, unknown>, privateKey: string) {
   return signer.sign(privateKey, "base64");
 }
 
+export function verifyTelebirrNotification(body: Record<string, unknown>) {
+  const publicKey = process.env.TELEBIRR_PUBLIC_KEY;
+  const signature = String(body?.sign || "").trim();
+  if (!publicKey || !signature) return false;
+  const origin = canonicalFields(body).map(([k,v]) => k + "=" + v).join("&");
+  const verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(origin);
+  verifier.end();
+  return verifier.verify(publicKey, signature, "base64");
+}
+
 async function postJson(url: string, body: unknown, headers: Record<string,string>) {
   const response = await fetch(url, {
     method: "POST",
