@@ -119,15 +119,15 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
       });
       if (!page.ok) continue;
       const html = await page.text();
-      const tables = html.match(/<table\b[\s\\S]*?<\/table>/gi) || [];
+      const tables = html.match(/<table\b[\s\S]*?<\/table>/gi) || [];
       for (const table of tables) {
         const plain = stripHtml(table);
         if (!/(fare|tariff|ታሪፍ|ክፍያ)/i.test(plain) || !/(km|kilometer|ኪ\.?ሜ)/i.test(plain)) continue;
         const serviceType = inferService(plain);
         if (!serviceType) continue;
-        const trs = table.match(/<tr\b[\s\\S]*?<\/tr>/gi) || [];
+        const trs = table.match(/<tr\b[\s\S]*?<\/tr>/gi) || [];
         for (const tr of trs) {
-          const cells = (tr.match(/<(?:td|th)\b[\s\\S]*?<\/(?:td|th)>/gi) || []).map(stripHtml);
+          const cells = (tr.match(/<(?:td|th)\b[\s\S]*?<\/(?:td|th)>/gi) || []).map(stripHtml);
           if (cells.length < 2) continue;
           const rowText = cells.join(" ");
           const ns = numbers(rowText);
