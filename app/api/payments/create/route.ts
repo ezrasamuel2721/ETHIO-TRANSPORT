@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { supabaseRest } from "@/lib/payments/supabase";
-import { createTelebirrOrder } from "@/lib/payments/telebirr";
+import { supabaseRest } from "../../../../lib/payments/supabase";
+import { createTelebirrOrder } from "../../../../lib/payments/telebirr";
 
 export async function POST(request: NextRequest) {
   try {
