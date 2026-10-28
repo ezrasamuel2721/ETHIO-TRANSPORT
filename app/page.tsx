@@ -223,7 +223,7 @@ export default function Home(){
     const r=await fetch("/api/routes?origin="+encodeURIComponent(origin)+"&destination="+encodeURIComponent(destination),{cache:"no-store"});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Route unavailable");
-    setRouteData(d);
+    setRouteData({...d,requestedOrigin:origin.trim(),requestedDestination:destination.trim()});
    }catch(e:any){setStatus(e?.message||"Route service unavailable.");}
    finally{setRouteLoading(false);}
   }
@@ -236,6 +236,12 @@ export default function Home(){
     if(fareArea.trim())params.set("area",fareArea.trim());
     if(fareCategory.trim())params.set("vehicleCategory",fareCategory.trim());
     if(fareKm.trim())params.set("distanceKm",fareKm.trim());
+    else if(routeData && routeData.estimated!==true &&
+      routeData.requestedOrigin===origin.trim() &&
+      routeData.requestedDestination===destination.trim() &&
+      Number.isFinite(Number(routeData.distanceKm))){
+      params.set("distanceKm",String(routeData.distanceKm));
+    }
     if(origin.trim())params.set("origin",origin.trim());
     if(destination.trim())params.set("destination",destination.trim());
     const r=await fetch("/api/fares?"+params.toString(),{cache:"no-store"});
