@@ -317,6 +317,16 @@ export async function GET(request: NextRequest) {
   const destination = (params.get("destination") || "").trim();
   let distanceKm = distanceRaw === "" ? null : Number(distanceRaw);
 
+  if (distanceRaw !== "" && (!Number.isFinite(distanceKm) || Number(distanceKm) < 0 || Number(distanceKm) > 5000)) {
+    return json({ error: "Distance must be a valid number from 0 to 5000 kilometres." }, 400);
+  }
+  if (origin.length > 180 || destination.length > 180) {
+    return json({ error: "Location text is too long." }, 400);
+  }
+  if (origin && destination && origin.toLowerCase() === destination.toLowerCase()) {
+    return json({ error: "Origin and destination must be different." }, 400);
+  }
+
   if (distanceKm === null && origin && destination) {
     try {
       const routeUrl = new URL("/api/routes", request.url);
