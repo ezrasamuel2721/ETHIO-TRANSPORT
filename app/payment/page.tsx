@@ -95,8 +95,11 @@ export default function PaymentPage() {
         <h1 style={{margin:"8px 0 6px"}}>ክፍያ ይፈጽሙ</h1>
         <p style={{opacity:.82,marginTop:0}}>ከETHIO TRANSPORT ሳይወጡ የተፈቀደ የክፍያ መንገድ ይምረጡ።</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))",gap:12,margin:"18px 0"}}>
-          <button onClick={()=>setPurpose("membership")} style={card(purpose==="membership")}>የዓመታዊ አገልግሎት<br/><b>250 ETB / 1 ዓመት</b></button>
-          <button onClick={()=>setPurpose("bus_ticket")} style={card(purpose==="bus_ticket")}>የባስ ቲኬት<br/><b>የተመረጠውን ዋጋ</b></button>
+          <div style={card(true)}>የዓመታዊ አገልግሎት<br/><b>250 ETB / 1 ዓመት</b></div>
+          <div style={{...card(false),opacity:.6,cursor:"not-allowed"}}>የባስ ቲኬት<br/><b>ከታወቀ አቅራቢ የተረጋገጠ ትዕዛዝ ጋር ሲገናኝ ይከፈታል</b></div>
+        </div>
+        {!providers.some(p=>p.configured) && <div style={{marginTop:12,padding:14,borderRadius:12,background:"rgba(214,196,106,.12)",border:"1px solid rgba(214,196,106,.35)"}}>
+          የክፍያ አቅራቢዎች የproduction መለያና ፈቃድ ገና አልተገናኙም። አሁን ክፍያ መፈጸም አይቻልም፤ የክፍያ ማረጋገጫም አይፈጠርም።
         </div>
         <h3 style={{marginBottom:10}}>የክፍያ መንገድ</h3>
         <div style={{display:"grid",gap:10}}>
@@ -109,7 +112,7 @@ export default function PaymentPage() {
         {purpose==="bus_ticket" && <label style={{display:"block",marginTop:16}}>የቲኬት መጠን
           <input type="number" min="1" max="1000000" value={amount} onChange={e=>setAmount(Number(e.target.value))} style={input}/>
         </label>}
-        <button disabled={busy} onClick={pay} style={{width:"100%",marginTop:20,padding:"15px 18px",border:0,borderRadius:14,fontWeight:800,fontSize:16,cursor:busy?"wait":"pointer"}}>{busy?"እየተዘጋጀ ነው…":"🔐 ክፍያ ጀምር"}</button>
+        <button disabled={busy || !providers.some(p=>p.code===provider && p.configured)} onClick={pay} style={{width:"100%",marginTop:20,padding:"15px 18px",border:0,borderRadius:14,fontWeight:800,fontSize:16,cursor:busy?"wait":"pointer",opacity:(!providers.some(p=>p.code===provider && p.configured) || busy)?0.55:1}}>{busy?"እየተዘጋጀ ነው…":providers.some(p=>p.code===provider && p.configured)?"🔐 ክፍያ ጀምር":"የክፍያ አቅራቢውን መገናኘት ይጠብቁ"}</button>
         {message && <div style={{marginTop:16,padding:14,borderRadius:12,background:"rgba(255,255,255,.08)"}}>{message}</div>}
         {transactionId && <div style={{marginTop:12,fontSize:12,opacity:.7}}>Transaction: {transactionId}</div>}
       </section>
