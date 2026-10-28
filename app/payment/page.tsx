@@ -32,6 +32,28 @@ export default function PaymentPage() {
     };
   },[]);
 
+  useEffect(() => {
+    if (!transactionId) return;
+    const customerRef = localStorage.getItem("ethio_transport_customer_ref") || "";
+    let attempts = 0;
+    const timer = window.setInterval(async () => {
+      attempts++;
+      try {
+        const r = await fetch("/api/payments/status?transactionId=" + encodeURIComponent(transactionId) + "&customerRef=" + encodeURIComponent(customerRef), { cache:"no-store" });
+        const d = await r.json();
+        if (d?.transaction?.status === "paid") {
+          setMessage(d.membershipActive ? "ክፍያው ተረጋግጧል። የ1 ዓመት አገልግሎትዎ ነቅቷል።" : "ክፍያው ተረጋግጧል።");
+          window.clearInterval(timer);
+        } else if (d?.transaction?.status === "failed" || d?.transaction?.status === "expired") {
+          setMessage("ክፍያው አልተሳካም። እባክዎ እንደገና ይሞክሩ።");
+          window.clearInterval(timer);
+        }
+      } catch {}
+      if (attempts >= 40) window.clearInterval(timer);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [transactionId]);
+
   useEffect(() => { if (purpose === "membership") setAmount(250); },[purpose]);
 
   async function pay() {
