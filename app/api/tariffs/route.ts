@@ -35,19 +35,28 @@ export async function GET(request: Request) {
     if (!r.ok) throw new Error("database");
     const rows = await r.json();
     const now = Date.now();
+    const sourceIsCurrent = (row: any) => {
+      const note = String(row.source_id?.verification_note || "");
+      if (/^Official/i.test(note)) return true;
+      const published = row.source_id?.published_at ? Date.parse(row.source_id.published_at) : NaN;
+      const effective = row.effective_from ? Date.parse(row.effective_from) : NaN;
+      const anchor = Number.isFinite(published) ? published : effective;
+      return Number.isFinite(anchor) && Date.now() - anchor <= 120 * 24 * 60 * 60 * 1000;
+    };
     const active = rows.filter((row: any) => {
       const from = row.effective_from ? Date.parse(row.effective_from) : -Infinity;
       const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;
       return row.status === "active" && from <= now && now <= to;
     });
-    const official = active.filter((row: any) => /^Official/i.test(String(row.source_id?.verification_note || "")));
-    const reported = active.filter((row: any) => !/^Official/i.test(String(row.source_id?.verification_note || "")));
+    const current = active.filter(sourceIsCurrent);
+    const official = current.filter((row: any) => /^Official/i.test(String(row.source_id?.verification_note || "")));
+    const reported = current.filter((row: any) => !/^Official/i.test(String(row.source_id?.verification_note || "")));
     return NextResponse.json({
       ok: true,
       source: official.length ? "verified-database" : reported.length ? "reported-current-source" : "verified-database",
       verifiedFareRows: official.length,
       reportedFareRows: reported.length,
-      fares: active,
+      fares: current,
       checkedAt: new Date().toISOString(),
     }, { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
   } catch {
