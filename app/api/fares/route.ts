@@ -15,7 +15,8 @@ function isOfficialFareSource(source: Fare) {
     const host = new URL(String(source.source_url || "")).hostname.toLowerCase().replace(/^www\./, "");
     return host.endsWith(".gov.et") ||
       host === "anrstlob.et" || host.endsWith(".anrstlob.et") ||
-      host === "srsrb.org" || host.endsWith(".srsrb.org");
+      host === "srsrb.org" || host.endsWith(".srsrb.org") ||
+      host === "diredawatransport.org" || host.endsWith(".diredawatransport.org");
   } catch {
     return false;
   }
