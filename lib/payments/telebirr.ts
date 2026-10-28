@@ -61,7 +61,7 @@ async function postJson(url: string, body: unknown, headers: Record<string,strin
 
 async function getFabricToken(c: TelebirrConfig) {
   const result = await postJson(
-    c.baseUrl.replace(/\\/$/,"") + "/payment/v1/token",
+    c.baseUrl.replace(/\/$/,"") + "/payment/v1/token",
     { appId: c.appId, appSecret: c.appSecret },
     { "X-APP-Key": c.fabricAppId }
   );
@@ -93,7 +93,7 @@ export async function createTelebirrOrder(input: { orderId:string; title:string;
   };
   const payload = { ...unsigned, sign: signRequest(unsigned, c.privateKey), sign_type: "SHA256WithRSA" };
   const result = await postJson(
-    c.baseUrl.replace(/\\/$/,"") + "/payment/v1/merchant/preOrder",
+    c.baseUrl.replace(/\/$/,"") + "/payment/v1/merchant/preOrder",
     payload,
     { "X-APP-Key": c.fabricAppId, Authorization: "Bearer " + await getFabricToken(c) }
   );
