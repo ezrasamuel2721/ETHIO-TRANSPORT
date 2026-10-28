@@ -291,8 +291,8 @@ export async function GET(request: NextRequest) {
       )
       .map(x => x.row);
 
-    const verifiedRows = ranked.filter(row => /official/i.test(String(row.source_id?.verification_note || "")));
-    const reportedRows = ranked.filter(row => !/official/i.test(String(row.source_id?.verification_note || "")));
+    const verifiedRows = ranked.filter(row => /^Official/i.test(String(row.source_id?.verification_note || "")));
+    const reportedRows = ranked.filter(row => !/^Official/i.test(String(row.source_id?.verification_note || "")));
 
     return json({
       serviceType,
