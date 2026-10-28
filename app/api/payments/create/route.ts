@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         customer_ref: customerRef, purpose, amount: finalAmount, currency: "ETB",
         provider_code: provider, status: "pending",
         metadata: { order_id: orderId },
-        expires_at: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + 120 * 60 * 1000).toISOString(),
       }),
     });
     const transactionId = created?.[0]?.id;
