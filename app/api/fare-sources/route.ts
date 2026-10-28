@@ -28,16 +28,33 @@ function htmlText(value: string) {
     .trim();
 }
 
+function isOfficialFareSource(source: Source) {
+  try {
+    const host = new URL(String(source.source_url || "")).hostname.toLowerCase().replace(/^www\./, "");
+    const officialHost = host.endsWith(".gov.et") ||
+      host === "anrstlob.et" || host.endsWith(".anrstlob.et") ||
+      host === "srsrb.org" || host.endsWith(".srsrb.org");
+    const identity = String(source.organization_name || "") + " " + String(source.title || "");
+    return officialHost && /(transport|road|logistics|public and private transportation|ministry of justice)/i.test(identity);
+  } catch {
+    return false;
+  }
+}
+
 function countFareTables(html: string) {
   const tables = html.match(/<table\b[\s\S]*?<\/table>/gi) || [];
+  let fareTables = 0;
   let fareRows = 0;
   for (const table of tables) {
     const text = htmlText(table).toLowerCase();
-    if (/(fare|tariff|ታሪፍ|ክፍያ|km|kilometer|ኪ\.?ሜ)/i.test(text)) {
-      fareRows += (table.match(/<tr\b/gi) || []).length;
+    const hasFare = /(fare|tariff|ታሪፍ|ክፍያ)/i.test(text);
+    const hasDistance = /(km|kilometer|kilometre|ኪ\.?ሜ|distance)/i.test(text);
+    if (hasFare && hasDistance) {
+      fareTables += 1;
+      fareRows += Math.max(0, (table.match(/<tr\b/gi) || []).length - 1);
     }
   }
-  return { tables: tables.length, fareRows };
+  return { tables: fareTables, fareRows };
 }
 
 async function readSources(base: string, key: string) {
@@ -53,7 +70,10 @@ async function readSources(base: string, key: string) {
     signal: AbortSignal.timeout(8000),
   });
   if (!response.ok) throw new Error("Could not read transport sources.");
-  return (await response.json()) as Source[];
+  const rows = (await response.json()) as Source[];
+  // This endpoint is labelled as an official-source monitor in the UI.
+  // Exclude news sites, booking marketplaces, and other secondary sources.
+  return rows.filter(isOfficialFareSource);
 }
 
 async function checkSource(source: Source): Promise<SourceCheck> {
