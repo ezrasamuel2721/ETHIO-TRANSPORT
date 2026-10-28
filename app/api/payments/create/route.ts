@@ -17,6 +17,19 @@ export async function POST(request: NextRequest) {
     if (!["telebirr","bank_gateway","card"].includes(provider)) {
       return NextResponse.json({ error: "Unsupported payment provider." }, { status: 400 });
     }
+    if (provider === "telebirr" && !(
+      process.env.TELEBIRR_BASE_URL &&
+      process.env.TELEBIRR_APP_ID &&
+      process.env.TELEBIRR_APP_SECRET &&
+      process.env.TELEBIRR_MERCHANT_CODE &&
+      process.env.TELEBIRR_FABRIC_APP_ID &&
+      process.env.TELEBIRR_PRIVATE_KEY &&
+      process.env.TELEBIRR_PUBLIC_KEY &&
+      process.env.TELEBIRR_NOTIFY_URL &&
+      process.env.TELEBIRR_REDIRECT_URL
+    )) {
+      return NextResponse.json({ error: "Telebirr production credentials are not configured yet." }, { status: 503 });
+    }
 
     const membershipPrice = Number(process.env.ETHIO_TRANSPORT_MEMBERSHIP_PRICE_ETB || "250");
     const finalAmount = purpose === "membership" ? membershipPrice : amount;
