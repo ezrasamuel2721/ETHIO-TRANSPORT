@@ -24,6 +24,14 @@ export async function POST(request: NextRequest) {
     if (!["telebirr","bank_gateway","card"].includes(provider)) {
       return NextResponse.json({ error: "Unsupported payment provider." }, { status: 400 });
     }
+    // The UI disables providers without checkout integration, but the server must
+    // enforce the same rule. Never create a pending transaction for a gateway
+    // that cannot take payment and return a verified callback.
+    if (provider !== "telebirr") {
+      return NextResponse.json({
+        error: "This payment provider does not yet have a live checkout integration."
+      }, { status: 503 });
+    }
     if (provider === "telebirr" && !(
       process.env.TELEBIRR_BASE_URL &&
       process.env.TELEBIRR_APP_ID &&
