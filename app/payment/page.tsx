@@ -100,7 +100,7 @@ export default function PaymentPage() {
         </div>
         {!providers.some(p=>p.configured) && <div style={{marginTop:12,padding:14,borderRadius:12,background:"rgba(214,196,106,.12)",border:"1px solid rgba(214,196,106,.35)"}}>
           የክፍያ አቅራቢዎች የproduction መለያና ፈቃድ ገና አልተገናኙም። አሁን ክፍያ መፈጸም አይቻልም፤ የክፍያ ማረጋገጫም አይፈጠርም።
-        </div>
+        </div>}
         <h3 style={{marginBottom:10}}>የክፍያ መንገድ</h3>
         <div style={{display:"grid",gap:10}}>
           {providers.map(p=><button key={p.code} disabled={!p.configured} onClick={()=>p.configured&&setProvider(p.code)} style={{...providerCard(provider===p.code),opacity:p.configured?1:.55,cursor:p.configured?"pointer":"not-allowed"}}>
