@@ -71,8 +71,8 @@ async function readDatabaseFares(base: string, key: string, serviceType: string)
 
 function stripHtml(value: string) {
   return value
-    .replace(/<script[\s\\S]*?<\\/script>/gi, " ")
-    .replace(/<style[\s\\S]*?<\\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
