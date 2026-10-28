@@ -40,8 +40,8 @@ export async function GET(request: Request) {
       const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;
       return row.status === "active" && from <= now && now <= to;
     });
-    const official = active.filter((row: any) => /official/i.test(String(row.source_id?.verification_note || "")));
-    const reported = active.filter((row: any) => !/official/i.test(String(row.source_id?.verification_note || "")));
+    const official = active.filter((row: any) => /^Official/i.test(String(row.source_id?.verification_note || "")));
+    const reported = active.filter((row: any) => !/^Official/i.test(String(row.source_id?.verification_note || "")));
     return NextResponse.json({
       ok: true,
       source: official.length ? "verified-database" : reported.length ? "reported-current-source" : "verified-database",
