@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseRest } from "@/lib/payments/supabase";
+import { supabaseRest } from "../../../../lib/payments/supabase";
 
 export async function GET(request: NextRequest) {
   const transactionId = request.nextUrl.searchParams.get("transactionId") || "";
