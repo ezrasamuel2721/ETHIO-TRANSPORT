@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
     const orderId = String(payload?.merch_order_id || payload?.biz_content?.merch_order_id || "").trim();
     const providerTransactionId = String(payload?.orderId || payload?.transaction_id || payload?.biz_content?.prepay_id || "").trim();
     const resultCode = String(payload?.resultCode || payload?.result_code || payload?.code || payload?.biz_content?.resultCode || "").toUpperCase();
+    const success = ["SUCCESS","0","000000","200"].includes(resultCode);
+    const failure = ["FAIL","FAILED","CANCEL","CANCELLED","ERROR"].includes(resultCode);
     if (!orderId) return NextResponse.json({ ok:false, error:"Missing merchant order id." }, { status:400 });
 
     const rows = await supabaseRest<Array<{id:string}>>(
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
       method:"PATCH", headers:{Prefer:"return=minimal"},
       body:JSON.stringify({
         provider_transaction_id:providerTransactionId || null,
-        status:resultCode === "SUCCESS" ? "processing" : "failed",
+        status:success ? "processing" : failure ? "failed" : "processing",
         metadata:{provider_callback:payload}
       })
     });
