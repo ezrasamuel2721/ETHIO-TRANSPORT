@@ -71,17 +71,17 @@ async function readDatabaseFares(base: string, key: string, serviceType: string)
 
 function stripHtml(value: string) {
   return value
-    .replace(/<script[\\s\\S]*?<\\/script>/gi, " ")
-    .replace(/<style[\\s\\S]*?<\\/style>/gi, " ")
+    .replace(/<script[\s\\S]*?<\\/script>/gi, " ")
+    .replace(/<style[\s\\S]*?<\\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function numbers(value: string) {
-  return (value.match(/\\d+(?:[.,]\\d+)?/g) || []).map(x => Number(x.replace(",", "."))).filter(Number.isFinite);
+  return (value.match(/\d+(?:[.,]\d+)?/g) || []).map(x => Number(x.replace(",", "."))).filter(Number.isFinite);
 }
 
 function inferService(text: string) {
@@ -119,22 +119,22 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
       });
       if (!page.ok) continue;
       const html = await page.text();
-      const tables = html.match(/<table\\b[\\s\\S]*?<\\/table>/gi) || [];
+      const tables = html.match(/<table\b[\s\\S]*?<\\/table>/gi) || [];
       for (const table of tables) {
         const plain = stripHtml(table);
-        if (!/(fare|tariff|ታሪፍ|ክፍያ)/i.test(plain) || !/(km|kilometer|ኪ\\.?ሜ)/i.test(plain)) continue;
+        if (!/(fare|tariff|ታሪፍ|ክፍያ)/i.test(plain) || !/(km|kilometer|ኪ\.?ሜ)/i.test(plain)) continue;
         const serviceType = inferService(plain);
         if (!serviceType) continue;
-        const trs = table.match(/<tr\\b[\\s\\S]*?<\\/tr>/gi) || [];
+        const trs = table.match(/<tr\b[\s\\S]*?<\\/tr>/gi) || [];
         for (const tr of trs) {
-          const cells = (tr.match(/<(?:td|th)\\b[\\s\\S]*?<\\/(?:td|th)>/gi) || []).map(stripHtml);
+          const cells = (tr.match(/<(?:td|th)\b[\s\\S]*?<\/(?:td|th)>/gi) || []).map(stripHtml);
           if (cells.length < 2) continue;
           const rowText = cells.join(" ");
           const ns = numbers(rowText);
           if (ns.length < 2) continue;
           const fare = ns[ns.length - 1];
           if (!(fare > 0 && fare < 100000)) continue;
-          const range = rowText.match(/(\\d+(?:[.,]\\d+)?)\\s*(?:-|–|—|to)\\s*(\\d+(?:[.,]\\d+)?)/i);
+          const range = rowText.match(/(\d+(?:[.,]\d+)?)\s*(?:-|–|—|to)\s*(\d+(?:[.,]\d+)?)/i);
           const min = range ? Number(range[1].replace(",", ".")) : null;
           const max = range ? Number(range[2].replace(",", ".")) : null;
           rows.push({
@@ -163,7 +163,8 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
   }
   return rows;
 }
-\nasync function readAuthorizedEndpoint(requestUrl: string) {
+
+async function readAuthorizedEndpoint(requestUrl: string) {
   const endpoint = process.env.TRANSPORT_TARIFFS_URL;
   if (!endpoint) return [];
   try {
@@ -215,6 +216,7 @@ export async function GET(request: NextRequest) {
       readDatabaseFares(base, key, serviceType),
       readAuthorizedEndpoint(request.url),
     ]);
+    const liveOfficialRows = await readLiveOfficialFares(base, key, regionCode);
 
     const candidates = [...databaseRows, ...authorizedRows].filter(activeNow);
     const ranked = candidates
@@ -233,7 +235,8 @@ export async function GET(request: NextRequest) {
       area: area || null,
       distanceKm,
       fares: ranked.slice(0, 20),
-      source: liveOfficialRows.length ? "live-official-source-and-verified-database" : authorizedRows.length ? "verified-database-and-authorized-provider" : "verified-database",\n      liveOfficialRows: liveOfficialRows.length,
+      source: liveOfficialRows.length ? "live-official-source-and-verified-database" : authorizedRows.length ? "verified-database-and-authorized-provider" : "verified-database",
+      liveOfficialRows: liveOfficialRows.length,
     });
   } catch (error: any) {
     return json({ error: error?.message || "Fare service is temporarily unavailable." }, 503);
