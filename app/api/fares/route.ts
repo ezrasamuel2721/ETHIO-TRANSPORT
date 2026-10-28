@@ -4,6 +4,7 @@ type Fare = Record<string, any>;
 type CacheEntry = { expires: number; rows: Fare[] };
 const memoryCache = new Map<string, CacheEntry>();
 const CACHE_MS = 30_000;
+const MAX_DB_ROWS = 500;
 
 const json = (body: unknown, status = 200) =>
   NextResponse.json(body, { status, headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=120" } });
@@ -53,7 +54,7 @@ async function readDatabaseFares(base: string, key: string, serviceType: string)
   url.searchParams.set("service_type", `eq.${serviceType}`);
   url.searchParams.set("status", "eq.active");
   url.searchParams.set("order", "effective_from.desc");
-  url.searchParams.set("limit", "500");
+  url.searchParams.set("limit", String(MAX_DB_ROWS));
 
   const response = await fetch(url, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
