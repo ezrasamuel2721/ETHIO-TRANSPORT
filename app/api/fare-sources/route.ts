@@ -33,7 +33,8 @@ function isOfficialFareSource(source: Source) {
     const host = new URL(String(source.source_url || "")).hostname.toLowerCase().replace(/^www\./, "");
     const officialHost = host.endsWith(".gov.et") ||
       host === "anrstlob.et" || host.endsWith(".anrstlob.et") ||
-      host === "srsrb.org" || host.endsWith(".srsrb.org");
+      host === "srsrb.org" || host.endsWith(".srsrb.org") ||
+      host === "diredawatransport.org" || host.endsWith(".diredawatransport.org");
     const identity = String(source.organization_name || "") + " " + String(source.title || "");
     return officialHost && /(transport|road|logistics|public and private transportation|ministry of justice)/i.test(identity);
   } catch {
