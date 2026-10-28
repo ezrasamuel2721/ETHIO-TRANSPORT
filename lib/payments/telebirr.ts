@@ -25,7 +25,7 @@ function getConfig(): TelebirrConfig {
 function nonce() { return crypto.randomBytes(16).toString("hex").toUpperCase(); }
 function timestamp() { return Math.floor(Date.now() / 1000).toString(); }
 
-function signRequest(body: Record<string, unknown>, privateKey: string) {
+function canonicalFields(body: Record<string, unknown>) {
   const excluded = new Set(["sign","sign_type","header","refund_info","openType","raw_request","wallet_reference_data"]);
   const fields: Array<[string,string]> = [];
   for (const [key,value] of Object.entries(body)) {
@@ -36,8 +36,11 @@ function signRequest(body: Record<string, unknown>, privateKey: string) {
       }
     } else fields.push([key,String(value)]);
   }
-  fields.sort((a,b) => a[0].localeCompare(b[0]));
-  const origin = fields.map(([k,v]) => k + "=" + v).join("&");
+  return fields.sort((a,b) => a[0].localeCompare(b[0]));
+}
+
+function signRequest(body: Record<string, unknown>, privateKey: string) {
+  const origin = canonicalFields(body).map(([k,v]) => k + "=" + v).join("&");
   const signer = crypto.createSign("RSA-SHA256");
   signer.update(origin);
   signer.end();
