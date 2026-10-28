@@ -164,6 +164,66 @@ async function readLiveOfficialFares(base: string, key: string, regionCode: stri
   return rows;
 }
 
+async function readLiveOfficialInfo(base: string, key: string, regionCode: string, serviceType: string) {
+  const url = new URL("/rest/v1/transport_sources", base);
+  url.searchParams.set("select", "id,organization_name,source_url,title,status");
+  url.searchParams.set("status", "eq.active");
+  url.searchParams.set("limit", "100");
+  const response = await fetch(url, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    cache: "no-store",
+    signal: AbortSignal.timeout(7000),
+  });
+  if (!response.ok) return [];
+  const sources = (await response.json()).filter((s: Fare) => {
+    const text = String(s.organization_name || "") + " " + String(s.source_url || "");
+    return /transport|motl|sidamacomb|transportbureau/i.test(text);
+  });
+  const selected = (regionCode === "AA"
+    ? sources.filter((s: Fare) => /transportbureau/i.test(String(s.source_url || "")) || /addis ababa/i.test(String(s.organization_name || "")))
+    : sources.filter((s: Fare) => /motl|sidamacomb/i.test(String(s.source_url || "")))
+  ).slice(0, 4);
+
+  const results: Fare[] = [];
+  for (const source of selected) {
+    try {
+      const page = await fetch(source.source_url, {
+        headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "ETHIO-TRANSPORT/1.0 (+live-source)" },
+        redirect: "follow",
+        cache: "no-store",
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!page.ok) continue;
+      const html = await page.text();
+      const plain = stripHtml(html);
+      const terms = serviceType === "rail"
+        ? /(rail|train|ባቡር|schedule|timetable)/i
+        : /(fare|tariff|ታሪፍ|ክፍያ|transport|መጓጓዣ)/i;
+      const hits = plain.split(/(?<=[.!?።])\s+/).filter((s: string) => terms.test(s));
+      results.push({
+        id: source.id,
+        organization_name: source.organization_name,
+        source_url: source.source_url,
+        title: source.title || "Official live source",
+        live_checked_at: new Date().toISOString(),
+        excerpt: (hits.slice(0, 5).join(" ").slice(0, 1800) || plain.slice(0, 900)),
+        source_status: "reachable",
+      });
+    } catch {
+      results.push({
+        id: source.id,
+        organization_name: source.organization_name,
+        source_url: source.source_url,
+        title: source.title || "Official live source",
+        live_checked_at: new Date().toISOString(),
+        excerpt: "",
+        source_status: "unreachable",
+      });
+    }
+  }
+  return results;
+}
+
 async function readAuthorizedEndpoint(requestUrl: string) {
   const endpoint = process.env.TRANSPORT_TARIFFS_URL;
   if (!endpoint) return [];
@@ -216,7 +276,10 @@ export async function GET(request: NextRequest) {
       readDatabaseFares(base, key, serviceType),
       readAuthorizedEndpoint(request.url),
     ]);
-    const liveOfficialRows = await readLiveOfficialFares(base, key, regionCode);
+    const [liveOfficialRows, liveOfficialInfo] = await Promise.all([
+      readLiveOfficialFares(base, key, regionCode),
+      readLiveOfficialInfo(base, key, regionCode, serviceType),
+    ]);
 
     const candidates = [...databaseRows, ...authorizedRows].filter(activeNow);
     const ranked = candidates
@@ -237,6 +300,8 @@ export async function GET(request: NextRequest) {
       fares: ranked.slice(0, 20),
       source: liveOfficialRows.length ? "live-official-source-and-verified-database" : authorizedRows.length ? "verified-database-and-authorized-provider" : "verified-database",
       liveOfficialRows: liveOfficialRows.length,
+      liveOfficialInfo,
+      checkedAt: new Date().toISOString(),
     });
   } catch (error: any) {
     return json({ error: error?.message || "Fare service is temporarily unavailable." }, 503);
