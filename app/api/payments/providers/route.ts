@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabasePublicRest } from "@/lib/payments/supabase";
+import { supabasePublicRest } from "../../../../lib/payments/supabase";
 
 export async function GET() {
   try {
