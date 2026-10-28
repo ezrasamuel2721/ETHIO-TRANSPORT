@@ -23,12 +23,16 @@ function distanceMatches(row: Fare, distanceKm: number | null) {
   return distanceKm >= min && distanceKm <= max;
 }
 
-function score(row: Fare, regionCode: string, city: string, area: string, distanceKm: number | null) {
+function score(row: Fare, regionCode: string, city: string, area: string, distanceKm: number | null, vehicleCategory: string) {
   let s = 0;
   if (row.region_code === regionCode) s += 60;
   else if (!row.region_code) s += 20;
   else return -1;
 
+  if (vehicleCategory) {
+    if (String(row.vehicle_category || "").trim().toLowerCase() === vehicleCategory.toLowerCase()) s += 80;
+    else if (row.vehicle_category) return -1;
+  }
   if (city) {
     if (String(row.city_name || "").trim().toLowerCase() === city.toLowerCase()) s += 30;
     else if (row.city_name) return -1;
@@ -254,6 +258,7 @@ export async function GET(request: NextRequest) {
   const regionCode = (params.get("regionCode") || "").trim().toUpperCase();
   const city = (params.get("city") || "").trim();
   const area = (params.get("area") || "").trim();
+  const vehicleCategory = (params.get("vehicleCategory") || "").trim();
   const distanceRaw = (params.get("distanceKm") || "").trim();
   const distanceKm = distanceRaw === "" ? null : Number(distanceRaw);
 
@@ -283,7 +288,7 @@ export async function GET(request: NextRequest) {
 
     const candidates = [...databaseRows, ...authorizedRows].filter(activeNow);
     const ranked = candidates
-      .map(row => ({ row, score: score(row, regionCode, city, area, distanceKm) }))
+      .map(row => ({ row, score: score(row, regionCode, city, area, distanceKm, vehicleCategory) }))
       .filter(x => x.score >= 0)
       .sort((a, b) =>
         b.score - a.score ||
@@ -299,6 +304,7 @@ export async function GET(request: NextRequest) {
       regionCode: regionCode || null,
       city: city || null,
       area: area || null,
+      vehicleCategory: vehicleCategory || null,
       distanceKm,
       fares: ranked.slice(0, 20),
       verifiedFareRows: verifiedRows.length,
