@@ -34,6 +34,26 @@ function parseCsvLine(line:string){
   out.push(cur); return out;
 }
 
+async function liveAddisDetails(routes:RouteRow[]){
+  const base="https://raw.githubusercontent.com/AddisMap/AddisMapTransit-gtfs/main/";
+  const [rr,tt,ss]=await Promise.all([fetch(base+"routes.txt",{cache:"no-store"}),fetch(base+"trips.txt",{cache:"no-store"}),fetch(base+"stop_times.txt",{cache:"no-store"}),]);
+  if(!rr.ok||!tt.ok||!ss.ok) return routes;
+  const [rtxt,ttxt,stxt]=await Promise.all([rr.text(),tt.text(),ss.text()]);
+  const parse=(t:string)=>{const ls=t.split(/\\r?\\n/).filter(Boolean);if(!ls.length)return [];const row=(s:string)=>{const a:string[]=[];let c="",q=false;for(let i=0;i<s.length;i++){const x=s[i];if(x==='"'){if(q&&s[i+1]==='"'){c+='"';i++;}else q=!q;}else if(x===','&&!q){a.push(c);c="";}else c+=x;}a.push(c);return a};const h=row(ls[0]);return ls.slice(1).map(x=>{const r=row(x),o:any={};h.forEach((k,i)=>o[k]=r[i]??"");return o});};
+  const gtfsRoutes=parse(rtxt), trips=parse(ttxt), times=parse(stxt);
+  const routeByCode=new Map(gtfsRoutes.map((r:any)=>[String(r.route_short_name||r.route_long_name).trim(),r]));
+  const tripMap=new Map(trips.map((t:any)=>[String(t.trip_id),t]));
+  const needed=new Set<string>();
+  for(const r of routes){const g=routeByCode.get(String(r.route_code||"").trim());if(g) needed.add(String(g.route_id));}
+  if(!needed.size)return routes;
+  const stopIds=new Set<string>();
+  const seqByRoute=new Map<string,any[]>();
+  for(const x of times){const t=tripMap.get(String(x.trip_id));if(!t||!needed.has(String(t.route_id)))continue;stopIds.add(String(x.stop_id));const arr=seqByRoute.get(String(t.route_id))||[];if(arr.length<80)arr.push({stop_id:String(x.stop_id),stop_sequence:Number(x.stop_sequence||0),trip_id:String(x.trip_id)});seqByRoute.set(String(t.route_id),arr);}
+  const stopRows=parse((await (await fetch(base+"stops.txt",{cache:"no-store"})).text()));
+  const stopMap=new Map(stopRows.map((s:any)=>[String(s.stop_id),s]));
+  return routes.map(r=>{const g=routeByCode.get(String(r.route_code||"").trim());if(!g)return r;const seq=(seqByRoute.get(String(g.route_id))||[]).sort((a,b)=>a.stop_sequence-b.stop_sequence);const seen=new Set<string>();const stops=seq.map(x=>{if(seen.has(x.stop_id))return null;seen.add(x.stop_id);const s=stopMap.get(x.stop_id);if(!s)return null;return {id:x.stop_id,name:s.stop_name,name_en:s.stop_name,latitude:Number(s.stop_lat),longitude:Number(s.stop_lon),stop_sequence:x.stop_sequence};}).filter(Boolean);return {...r,gtfs_route_id:String(g.route_id),stops,stopCount:stops.length,stopSource:"AddisMapTransit GTFS / OpenStreetMap"};});
+}
+
 async function liveAddisRoutes(origin:string,destination:string){
   const url="https://raw.githubusercontent.com/AddisMap/AddisMapTransit-gtfs/main/routes.txt";
   const r=await fetch(url,{cache:"no-store"});
