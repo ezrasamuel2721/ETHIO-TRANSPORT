@@ -27,22 +27,92 @@ function regionFromAddress(address: Record<string,string> = {}, display = "") {
   return REGION_PATTERNS.find(([, pattern]) => pattern.test(text))?.[0] || null;
 }
 
+function normalizePlace(value: string) {
+  return value.toLocaleLowerCase().normalize("NFKC").replace(/[’']/g, "").replace(/[-_/.,()]/g, " ").replace(/\\s+/g, " ").trim();
+}
+
 async function geocode(query: string): Promise<Point | null> {
+  const base = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+
+  if (base && key) {
+    const normalized = normalizePlace(query);
+    const cachedUrl = new URL("/rest/v1/transport_places", base);
+    cachedUrl.searchParams.set("select", "canonical_name,name_en,name_am,name_om,aliases,latitude,longitude,region_code,region_name,city_name,sub_city_name,woreda_name,source_name,source_url,confidence,last_verified_at");
+    cachedUrl.searchParams.set("active", "eq.true");
+    cachedUrl.searchParams.set("limit", "5");
+    cachedUrl.searchParams.set("or", `normalized_name.eq.${encodeURIComponent(normalized)},canonical_name.ilike.*${encodeURIComponent(normalized)}*,name_en.ilike.*${encodeURIComponent(normalized)}*`);
+    const cachedResponse = await fetch(cachedUrl, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      next: { revalidate: 300 },
+    });
+    if (cachedResponse.ok) {
+      const cached = await cachedResponse.json();
+      const best = cached?.[0];
+      if (best && Number.isFinite(Number(best.latitude)) && Number.isFinite(Number(best.longitude))) {
+        return {
+          lat: Number(best.latitude),
+          lon: Number(best.longitude),
+          display: best.canonical_name || best.name_en || query,
+          address: {
+            state: best.region_name || "",
+            city: best.city_name || "",
+            suburb: best.sub_city_name || "",
+            city_district: best.woreda_name || "",
+          },
+        };
+      }
+    }
+  }
+
   const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", query);
+  url.searchParams.set("q", query + ", Ethiopia");
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("addressdetails", "1");
-  url.searchParams.set("limit", "1");
+  url.searchParams.set("limit", "5");
   url.searchParams.set("countrycodes", "et");
   const response = await fetch(url, {
     headers: { "User-Agent": "ETHIO-TRANSPORT/1.0 (public transport fare search)" },
-    cache: "no-store",
+    next: { revalidate: 3600 },
     signal: AbortSignal.timeout(8000),
   });
   if (!response.ok) return null;
   const rows = await response.json();
   const row = rows?.[0];
   if (!row) return null;
+
+  if (base && key) {
+    const address = row.address || {};
+    const regionCode = regionFromAddress(address, row.display_name || "");
+    const canonical = String(address.neighbourhood || address.suburb || address.village || address.town || address.city || row.display_name || query);
+    const aliases = Array.from(new Set([query, canonical, address.neighbourhood, address.suburb, address.village, address.town, address.city].filter(Boolean).map(String)));
+    const insertUrl = new URL("/rest/v1/transport_places", base);
+    void fetch(insertUrl, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal,resolution=merge-duplicates" },
+      body: JSON.stringify({
+        canonical_name: canonical,
+        name_en: canonical,
+        normalized_name: normalizePlace(canonical),
+        aliases,
+        place_type: address.neighbourhood ? "neighborhood" : address.suburb ? "suburb" : address.city ? "city" : "locality",
+        region_code: regionCode,
+        region_name: address.state || address.region || null,
+        city_name: address.city || address.town || address.municipality || address.village || null,
+        sub_city_name: address.suburb || address.neighbourhood || null,
+        woreda_name: address.city_district || address.district || null,
+        latitude: Number(row.lat),
+        longitude: Number(row.lon),
+        source_name: "OpenStreetMap Nominatim",
+        source_url: "https://nominatim.openstreetmap.org/",
+        source_reference: row.osm_id ? `osm:${row.osm_type || "object"}:${row.osm_id}` : null,
+        confidence: Number(row.type === "neighbourhood" ? 0.95 : row.type === "suburb" ? 0.9 : 0.8),
+        active: true,
+        last_verified_at: new Date().toISOString(),
+      }),
+    }).catch(() => undefined);
+  }
+
   return {
     lat: Number(row.lat),
     lon: Number(row.lon),
