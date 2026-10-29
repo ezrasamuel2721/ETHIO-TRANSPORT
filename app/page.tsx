@@ -45,6 +45,39 @@ const operators = [
  ["Limalimo","https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=900&q=80"]
 ];
 
+const emergencyVisualSets: Record<string,string[]> = {
+  default:[
+    "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85"
+  ],
+  "Addis Ababa":[
+    "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85"
+  ],
+  "Amhara":[
+    "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85"
+  ],
+  "Oromia":[
+    "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85"
+  ],
+  "Tigray":[
+    "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85"
+  ],
+  "Sidama":[
+    "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85"
+  ]
+};
+
 const ethiopianVisuals = [
  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Ethiopian_aircraft_at_Bole_International_Airport_-_BugWarp_01.jpg",
  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Minibus_taxi_in_Addis_Ababa.jpg",
@@ -184,7 +217,7 @@ export default function Home(){
  const [report,setReport]=useState({name:"",phone:"",category:"Fare / overcharge",description:"",location:""});
  const [trip,setTrip]=useState({origin:"",destination:"",time:"",notes:""}),[savedTrips,setSavedTrips]=useState<any[]>([]);
  const [accessNeed,setAccessNeed]=useState("Wheelchair access"),[parcel,setParcel]=useState({from:"",to:"",description:""});
- const [ticketProviders,setTicketProviders]=useState<any[]>([]),[operatorProviders,setOperatorProviders]=useState<any[]>([]),[emergencyContacts,setEmergencyContacts]=useState<any[]>([]);
+ const [ticketProviders,setTicketProviders]=useState<any[]>([]),[operatorProviders,setOperatorProviders]=useState<any[]>([]),[emergencyContacts,setEmergencyContacts]=useState<any[]>([]),[emergencyVisualIndex,setEmergencyVisualIndex]=useState(0);
  const L=T[lang], selected=serviceData.find(x=>x.id===active);
  const ticketItems=ticketProviders.length?ticketProviders.map(p=>{const base=ticketPlatforms.find(x=>x.name===p.name)||ticketPlatforms[0];return {name:p.name,meta:p.source_id?.organization_name||"Verified provider",url:p.booking_url,image:base.image}}):ticketPlatforms;
  const operatorItems=operatorProviders.length?operatorProviders.map((p,i)=>{const base=operators.find(x=>x[0]===p.name)||operators[i%operators.length];return {name:p.name,image:base?.[1]||operators[0][1],url:p.booking_url,source:p.source_id?.organization_name||"Verified source"}}):operators.map(([name,image])=>({name,image,url:"https://i-ticket.et/",source:"Ticket directory"}));
@@ -217,6 +250,7 @@ export default function Home(){
  },[]);
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
  useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%3),5200);return()=>window.clearInterval(id)},[]);
+ useEffect(()=>{const id=window.setInterval(()=>setEmergencyVisualIndex(i=>(i+1)%3),4300);return()=>window.clearInterval(id)},[]);
  useEffect(()=>save("ethio_transport_lang",lang),[lang]);
  useEffect(()=>{document.documentElement.lang=lang==="am"?"am":lang==="ao"?"om":lang},[lang]);
  useEffect(()=>{if(active==="fare"){fetch("/api/fare-regions",{cache:"force-cache"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.regions))setFareRegions(d.regions)}).catch(()=>{});setFareSourcesLoading(true);fetch("/api/fare-sources",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.sources))setFareSources(d.sources)}).catch(()=>{}).finally(()=>setFareSourcesLoading(false));} if(active==="ticket"){fetch("/api/tickets",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.providers))setTicketProviders(d.providers)}).catch(()=>{});fetch("/api/operators",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.operators))setOperatorProviders(d.operators)}).catch(()=>{});} if(active==="emergency"){fetch("/api/emergency",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(Array.isArray(d?.contacts))setEmergencyContacts(d.contacts)}).catch(()=>{});}},[active]);
@@ -394,7 +428,7 @@ export default function Home(){
 
    {active==="map"&&<div className="feature-form"><div className="map-preview"><div>📍</div><strong>{L.location}</strong><span>{coords?coords.lat.toFixed(6)+", "+coords.lon.toFixed(6):"GPS location not captured"}</span></div><div className="action-row"><button className="primary" onClick={locate}>📍 {L.useGps}</button>{coords&&<a className="outline" target="_blank" rel="noreferrer" href={"https://www.google.com/maps/search/?api=1&query="+coords.lat+","+coords.lon}>{L.map} ↗</a>}</div></div>}
 
-   {active==="emergency"&&<div className="emergency-grid">{(emergencyContacts.length?emergencyContacts:[{name:"Addis Ababa Police",name_am:"የአዲስ አበባ ፖሊስ",name_om:"Poolisii Finfinnee",name_en:"Addis Ababa Police",phone:"991"},{name:"Sidama Police",name_am:"የሲዳማ ፖሊስ",name_om:"Poolisii Sidaamaa",name_en:"Sidama Police",phone:"8295"},{name:"Federal Police",name_am:"የፌዴራል ፖሊስ",name_om:"Poolisii Federaalaa",name_en:"Federal Police",phone:"990"},{name:"Red Cross emergency",name_am:"ቀይ መስቀል",name_om:"Fannoo Diimaa",name_en:"Red Cross emergency",phone:"907"},{name:"Fire emergency",name_am:"የእሳት አደጋ",name_om:"Balaa ibiddaa",name_en:"Fire emergency",phone:"912"}]).map((x,i)=><a className={"emergency-card "+(i===0?"red":"")} key={x.name+x.phone} href={"tel:"+x.phone}><span>{x.phone==="991"?"🚔":x.phone==="990"?"📞":x.phone==="907"?"🚑":x.phone==="912"?"🔥":"🚨"}</span><strong>{lang==="am"?x.name_am:lang==="en"?x.name_en:x.name_om}</strong><b>{x.phone}</b><small>{x.area||L.emergency}</small></a>)}</div>}
+   {active==="emergency"&&<div className="emergency-grid">{(emergencyContacts.length?emergencyContacts:[{name:"Addis Ababa Police",name_am:"የአዲስ አበባ ፖሊስ",name_om:"Poolisii Finfinnee",name_en:"Addis Ababa Police",phone:"991",area:"Addis Ababa"},{name:"Federal Police",name_am:"የፌዴራል ፖሊስ",name_om:"Poolisii Federaalaa",name_en:"Federal Police",phone:"990",area:"Ethiopia"},{name:"Fire emergency",name_am:"የእሳት አደጋ",name_om:"Balaa ibiddaa",name_en:"Fire emergency",phone:"912",area:"Addis Ababa"},{name:"Ethiopian Red Cross Society Ambulance",name_am:"የኢትዮጵያ ቀይ መስቀል አምቡላንስ",name_om:"Ambulaansii Fannoo Diimaa Itoophiyaa",name_en:"Ethiopian Red Cross Society Ambulance",phone:"907",area:"Addis Ababa"}]).map((x,i)=>{const area=x.area||"Ethiopia";const visuals=emergencyVisualSets[area]||emergencyVisualSets.default;const image=visuals[emergencyVisualIndex%visuals.length];return <a className={"emergency-card "+(x.phone==="991"?"red":"")} key={x.name+x.phone} href={"tel:"+x.phone} aria-label={(x.name_en||x.name)+" "+x.phone}><div className="emergency-card-photo"><img src={image} alt="" loading="lazy"/><div className="emergency-card-shade"></div><div className="emergency-card-content"><span>{x.phone==="991"?"🚔":x.phone==="990"?"📞":x.phone==="907"?"🚑":x.phone==="912"?"🔥":"🚨"}</span><strong>{lang==="am"?x.name_am:lang==="en"?x.name_en:x.name_om}</strong><b>{x.phone}</b><small>{area}</small></div></div></a>})}</div>}
 
    {active==="trusted"&&<div className="feature-form"><div className="form-grid"><label>{L.from}<input value={trip.origin} onChange={e=>setTrip({...trip,origin:e.target.value})}/></label><label>{L.to}<input value={trip.destination} onChange={e=>setTrip({...trip,destination:e.target.value})}/></label><label>{L.time}<input type="datetime-local" value={trip.time} onChange={e=>setTrip({...trip,time:e.target.value})}/></label></div><label>{L.notes}<textarea value={trip.notes} onChange={e=>setTrip({...trip,notes:e.target.value})}/></label><button className="primary" onClick={addTrip}>🛡️ {L.save}</button>{savedTrips.length>0&&<div className="saved-list">{savedTrips.map(x=><div className="saved-item" key={x.id}><strong>{x.origin} → {x.destination}</strong><span>{x.time||x.createdAt}</span></div>)}</div>}</div>}
 
