@@ -1,0 +1,36 @@
+name: Sync Addis GTFS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/sync-addis-gtfs.mjs"
+      - ".github/workflows/sync-addis-gtfs.yml"
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/sync-addis-gtfs.mjs
+      - name: Commit updated GTFS snapshot
+        run: |
+          git config user.name "ETHIO TRANSPORT Data Sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/addis-gtfs-routes.json
+          if git diff --cached --quiet; then
+            echo "No GTFS changes."
+            exit 0
+          fi
+          git commit -m "chore: sync Addis GTFS route stops [skip ci]"
+          git push
