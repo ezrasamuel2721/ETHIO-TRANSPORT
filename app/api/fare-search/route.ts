@@ -1,0 +1,195 @@
+import { NextRequest, NextResponse } from "next/server";
+
+type Point = { lat: number; lon: number; display?: string; address?: Record<string,string> };
+
+const REGION_PATTERNS: Array<[string, RegExp]> = [
+  ["AA", /addis ababa|አዲስ አበባ|finfinne/i],
+  ["DD", /dire dawa|ድሬዳዋ/i],
+  ["AF", /afar|አፋር/i],
+  ["AM", /amhara|አማራ/i],
+  ["BE", /benishangul|gumuz|ቤንሻንጉል/i],
+  ["CE", /central ethiopia|central region|ማዕከላዊ ኢትዮጵያ/i],
+  ["GA", /gambella|ጋምቤላ/i],
+  ["HA", /harari|harar|ሐረሪ/i],
+  ["OR", /oromia|ኦሮሚያ/i],
+  ["SD", /sidama|ሲዳማ/i],
+  ["SO", /somali|ሶማሌ/i],
+  ["SE", /south ethiopia|southern ethiopia|ደቡብ ኢትዮጵያ/i],
+  ["SW", /south west ethiopia|southwest ethiopia|ደቡብ ምዕራብ/i],
+  ["TG", /tigray|ትግራይ/i],
+];
+
+const json = (body: unknown, status = 200) =>
+  NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
+
+function regionFromAddress(address: Record<string,string> = {}, display = "") {
+  const text = Object.values(address).join(" ") + " " + display;
+  return REGION_PATTERNS.find(([, pattern]) => pattern.test(text))?.[0] || null;
+}
+
+async function geocode(query: string): Promise<Point | null> {
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", query);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("countrycodes", "et");
+  const response = await fetch(url, {
+    headers: { "User-Agent": "ETHIO-TRANSPORT/1.0 (public transport fare search)" },
+    cache: "no-store",
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) return null;
+  const rows = await response.json();
+  const row = rows?.[0];
+  if (!row) return null;
+  return {
+    lat: Number(row.lat),
+    lon: Number(row.lon),
+    display: row.display_name,
+    address: row.address || {},
+  };
+}
+
+async function roadDistance(a: Point, b: Point) {
+  const url = `https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false&steps=false`;
+  const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(10000) });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const route = data?.routes?.[0];
+  return route ? {
+    distanceKm: Number(route.distance) / 1000,
+    durationMinutes: Number(route.duration) / 60,
+  } : null;
+}
+
+function activeNow(row: any) {
+  const now = Date.now();
+  const from = row.effective_from ? Date.parse(row.effective_from) : -Infinity;
+  const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;
+  return row.status === "active" && from <= now && now <= to;
+}
+
+function matchesDistance(row: any, km: number) {
+  const min = row.distance_min_km == null ? 0 : Number(row.distance_min_km);
+  const max = row.distance_max_km == null ? Infinity : Number(row.distance_max_km);
+  return km >= min && km <= max;
+}
+
+function calculateFare(row: any, km: number) {
+  const fixed = Number(row.fixed_fare);
+  if (Number.isFinite(fixed)) return fixed;
+  const base = Number(row.base_fare || 0);
+  const rate = Number(row.rate_per_km);
+  if (!Number.isFinite(rate)) return null;
+  const raw = base + km * rate;
+  const minimum = Number(row.minimum_fare);
+  return Number.isFinite(minimum) ? Math.max(raw, minimum) : raw;
+}
+
+export async function GET(request: NextRequest) {
+  const params = new URL(request.url).searchParams;
+  const origin = (params.get("origin") || "").trim();
+  const destination = (params.get("destination") || "").trim();
+
+  if (!origin || !destination) return json({ error: "Origin and destination are required." }, 400);
+  if (origin.length > 180 || destination.length > 180) return json({ error: "Location text is too long." }, 400);
+  if (origin.toLowerCase() === destination.toLowerCase()) return json({ error: "Origin and destination must be different." }, 400);
+
+  const base = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!base || !key) return json({ error: "Fare database is not configured." }, 503);
+
+  try {
+    const [a, b] = await Promise.all([geocode(origin), geocode(destination)]);
+    if (!a || !b) return json({ error: "One or both locations could not be found in Ethiopia." }, 404);
+
+    const route = await roadDistance(a, b);
+    if (!route) {
+      return json({
+        error: "Road distance could not be calculated. No fare was selected because a distance-based fare must not be guessed.",
+        source: "route-unavailable",
+      }, 503);
+    }
+
+    const distanceKm = Number(route.distanceKm.toFixed(2));
+    const originRegion = regionFromAddress(a.address, a.display);
+    const destinationRegion = regionFromAddress(b.address, b.display);
+    const regionCode = originRegion && destinationRegion && originRegion === destinationRegion
+      ? originRegion
+      : originRegion || destinationRegion;
+
+    const fareUrl = new URL("/rest/v1/transport_fares", base);
+    fareUrl.searchParams.set(
+      "select",
+      "id,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,effective_from,effective_to,status,region_code,region_name,city_name,area_name,fare_scope,distance_min_km,distance_max_km,passenger_type,notes,source_id(id,organization_name,source_url,title,published_at,effective_from,status,verification_note)"
+    );
+    fareUrl.searchParams.set("status", "eq.active");
+    fareUrl.searchParams.set("order", "effective_from.desc");
+    fareUrl.searchParams.set("limit", "500");
+
+    const fareResponse = await fetch(fareUrl, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!fareResponse.ok) return json({ error: "Could not read current fare data." }, 503);
+
+    const rows = (await fareResponse.json()).filter(activeNow).filter((row: any) => {
+      if (!regionCode) return true;
+      return !row.region_code || row.region_code === regionCode;
+    });
+
+    const services = ["bus", "taxi", "rail"];
+    const results: any[] = [];
+
+    for (const serviceType of services) {
+      const candidates = rows
+        .filter((row: any) => row.service_type === serviceType)
+        .filter((row: any) => matchesDistance(row, distanceKm))
+        .filter((row: any) => {
+          if (row.city_name && a.address?.city && row.city_name.toLowerCase() !== String(a.address.city).toLowerCase()) return false;
+          return true;
+        })
+        .map((row: any) => ({ ...row, calculated_fare: calculateFare(row, distanceKm) }))
+        .filter((row: any) => row.calculated_fare != null)
+        .sort((x: any, y: any) => {
+          const xOfficial = /^Official/i.test(String(x.source_id?.verification_note || ""));
+          const yOfficial = /^Official/i.test(String(y.source_id?.verification_note || ""));
+          return Number(yOfficial) - Number(xOfficial) ||
+            Number(y.effective_from ? Date.parse(y.effective_from) : 0) -
+            Number(x.effective_from ? Date.parse(x.effective_from) : 0);
+        });
+
+      if (candidates[0]) results.push(candidates[0]);
+    }
+
+    return json({
+      origin: {
+        query: origin,
+        display: a.display,
+        regionCode: originRegion,
+        lat: a.lat,
+        lon: a.lon,
+      },
+      destination: {
+        query: destination,
+        display: b.display,
+        regionCode: destinationRegion,
+        lat: b.lat,
+        lon: b.lon,
+      },
+      sameRegion: Boolean(originRegion && destinationRegion && originRegion === destinationRegion),
+      regionCode,
+      distanceKm,
+      durationMinutes: Math.round(route.durationMinutes),
+      fares: results,
+      checkedAt: new Date().toISOString(),
+      integrity: results.length
+        ? "Only an active fare whose published distance band contains the calculated road distance is returned. Missing bands are never interpolated."
+        : "No active published fare band covers this calculated road distance. No fare was invented or interpolated.",
+    });
+  } catch {
+    return json({ error: "Quick fare search is temporarily unavailable." }, 503);
+  }
+}
