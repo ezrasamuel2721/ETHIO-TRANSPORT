@@ -57,3 +57,11 @@
 .emergency-card.red .emergency-card-shade{background:linear-gradient(180deg,rgba(120,20,12,.12),rgba(74,16,10,.82))}
 @keyframes emergencyVisualIn{from{opacity:.35;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
 @media(max-width:620px){.emergency-card{min-height:215px}.emergency-card-content strong{font-size:16px}.emergency-card-content b{font-size:32px}.emergency-card-content span{font-size:27px}}
+
+
+/* Emergency regional cards: centered identity and rotating safety guidance */
+.emergency-region-heading{inset:8px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.emergency-region-heading strong{font-size:clamp(20px,2vw,26px);line-height:1.1}
+.emergency-region-message{margin:5px 0 0;max-width:100%;padding:7px 11px;border:1px solid rgba(255,255,255,.28);border-radius:11px;background:rgba(0,25,16,.5);backdrop-filter:blur(5px);font-size:11px;font-weight:800;line-height:1.32;color:#fff}
+.emergency-region-message b{display:block;margin-bottom:2px;font-size:9px;font-weight:950;letter-spacing:.35px;opacity:.92}
+@media(max-width:620px){.emergency-region-photo{height:205px}.emergency-region-message{font-size:10px;padding:6px 9px}.emergency-region-message b{font-size:8px}}
