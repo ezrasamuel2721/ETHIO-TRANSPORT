@@ -86,7 +86,7 @@ export async function GET(request:NextRequest){
 
   try{
     const url=new URL("/rest/v1/transport_routes",base);
-    url.searchParams.set("select","id,route_code,name,name_am,name_om,name_en,origin,destination,distance_km,service_type,region_code,active,verified_at,transport_operators(name,name_am,name_om,name_en),transport_route_stops(stop_sequence,transport_stops(id,name,name_am,name_om,name_en,latitude,longitude))");
+    url.searchParams.set("select","id,route_code,name,name_am,name_om,name_en,origin,destination,distance_km,service_type,region_code,active,verified_at,transport_operators(name,name_am,name_om,name_en),transport_route_stops(stop_sequence,transport_stops(id,name,name_am,name_om,name_en,latitude,longitude)),transport_sources(organization_name,source_url,title,status,verification_note)");
     url.searchParams.set("active","eq.true");
     url.searchParams.set("limit","500");
     const r=await fetch(url,{headers:{apikey:key,Authorization:`Bearer ${key}`},next:{revalidate:60}});
