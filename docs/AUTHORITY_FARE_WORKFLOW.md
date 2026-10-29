@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Transport authorities can send current, official tariff data directly into ETHIO TRANSPORT. The public app reads only submissions that have passed the reviewer workflow and have status `published`.
+Authorized transport authorities can publish current, official tariff data directly into ETHIO TRANSPORT. Once an authority account is formally onboarded, its tariff submission becomes public immediately after submission.
 
-The Ministry of Transport and Logistics publicly lists Addis Ababa and regional transport offices, supporting the need for a coordinated federal/regional transport information workflow.
+There is no reviewer, approval, or publication queue between the authorized authority and the public fare search.
 
 ## Workflow
 
-Authority account -> Submit -> Reviewer -> Approve -> Publish -> Public fare search
+Authority account -> Submit -> Immediate public fare search
 
-A published submission is immediately available through the public fare-search API. The app does not invent, interpolate, or expose a draft tariff.
+The authority is the final official source for the tariff. The system records the authority, source/evidence details, effective dates, and audit timestamps, but does not place another human reviewer in the publication path.
 
 ## Authority accounts
 
@@ -27,25 +27,13 @@ Create a Supabase Auth user for each participating transport authority and set a
 
 Use `app_metadata`, not `user_metadata`, for authorization.
 
-Reviewer/admin accounts use:
+The authority account itself must be formally onboarded before it can publish data.
 
-```json
-{ "role": "reviewer" }
-```
+## Portal
 
-or:
+Authority portal: `/authority`
 
-```json
-{ "role": "admin" }
-```
-
-## Portals
-
-Authority submission portal: `/authority`
-
-Reviewer console: `/review/authority-fares`
-
-The portal uses Supabase email/password authentication. Database RLS independently enforces authority ownership, assigned region, reviewer permissions, and public visibility.
+The portal uses Supabase email/password authentication. Database RLS enforces authority ownership, assigned region, and public visibility.
 
 ## Data captured
 
@@ -62,16 +50,16 @@ Each submission records:
 - official document URL
 - decision/reference number
 - notes
-- review and publication timestamps
+- creation/update timestamps
 
 ## Public integrity rule
 
-Only `published` authority submissions whose effective date window contains the current time are eligible for public fare search.
+Only `active` authority submissions whose effective date window contains the current time are eligible for public fare search.
 
-Authority-published records are ranked ahead of older database fare rows for the same service/distance match.
+Expired records are not returned as current fares.
+
+The system never invents or interpolates a missing tariff band.
 
 ## Official source context
-
-The Ministry of Transport and Logistics regional-office directory lists Addis Ababa and regional transport offices. The Addis Ababa City Administration Transport Bureau also publishes transport resources and public contact/location information.
 
 This implementation creates the technical channel; it does not claim that any authority has agreed to participate until that authority is formally onboarded and its account is provisioned.
