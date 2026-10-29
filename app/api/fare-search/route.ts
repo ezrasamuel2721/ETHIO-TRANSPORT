@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
   const params = new URL(request.url).searchParams;
   const origin = (params.get("origin") || "").trim();
   const destination = (params.get("destination") || "").trim();
+  const requestedRegion = (params.get("regionCode") || "").trim().toUpperCase();
 
   if (!origin || !destination) return json({ error: "Origin and destination are required." }, 400);
   if (origin.length > 180 || destination.length > 180) return json({ error: "Location text is too long." }, 400);
@@ -115,9 +116,21 @@ export async function GET(request: NextRequest) {
     const distanceKm = Number(route.distanceKm.toFixed(2));
     const originRegion = regionFromAddress(a.address, a.display);
     const destinationRegion = regionFromAddress(b.address, b.display);
-    const regionCode = originRegion && destinationRegion && originRegion === destinationRegion
-      ? originRegion
-      : originRegion || destinationRegion;
+    const sameRegion = Boolean(originRegion && destinationRegion && originRegion === destinationRegion);
+    const regionCode = requestedRegion || (sameRegion ? originRegion : null);
+    if (!sameRegion && !requestedRegion) {
+      return json({
+        origin: { query: origin, display: a.display, regionCode: originRegion, lat: a.lat, lon: a.lon },
+        destination: { query: destination, display: b.display, regionCode: destinationRegion, lat: b.lat, lon: b.lon },
+        sameRegion: false,
+        needsRegionSelection: true,
+        regionOptions: [originRegion, destinationRegion].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i),
+        distanceKm,
+        durationMinutes: Math.round(route.durationMinutes),
+        fares: [],
+        checkedAt: new Date().toISOString(),
+      });
+    }
 
     const fareUrl = new URL("/rest/v1/transport_fares", base);
     fareUrl.searchParams.set(
@@ -179,7 +192,7 @@ export async function GET(request: NextRequest) {
         lat: b.lat,
         lon: b.lon,
       },
-      sameRegion: Boolean(originRegion && destinationRegion && originRegion === destinationRegion),
+      sameRegion,
       regionCode,
       distanceKm,
       durationMinutes: Math.round(route.durationMinutes),
