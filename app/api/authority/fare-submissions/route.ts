@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     order: "created_at.desc",
     limit: "100",
   });
-  if (status && ["submitted","reviewing","approved","rejected","published","expired"].includes(status)) query.set("status", "eq." + status);
+  if (status && ["active","expired"].includes(status)) query.set("status", "eq." + status);
 
   const response = await fetch(supabaseUrl + "/rest/v1/authority_fare_submissions?" + query.toString(), {
     headers: { apikey: supabaseKey, Authorization: authority.authorization },
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
       source_reference: sourceReference,
       effective_from: body?.effectiveFrom ? new Date(body.effectiveFrom).toISOString() : null,
       effective_to: body?.effectiveTo ? new Date(body.effectiveTo).toISOString() : null,
-      status: "submitted",
+      status: "active",
     };
 
     const response = await fetch(supabaseUrl + "/rest/v1/authority_fare_submissions", {
