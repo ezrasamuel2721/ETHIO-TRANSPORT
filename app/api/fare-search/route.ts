@@ -206,8 +206,43 @@ export async function GET(request: NextRequest) {
     // agreement is in place. Legacy/secondary transport_fares rows are deliberately
     // not returned to users, even if they are marked active in the database.
     // The authority workflow is the only public source for current fares.
-    const authorityUrl = new URL("/rest/v1/authority_fare_submissions", base);\n    authorityUrl.searchParams.set("select", "id,authority_user_id,authority_name,region_code,region_name,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,fare_scope,city_name,area_name,distance_min_km,distance_max_km,passenger_type,notes,source_document_url,source_document_title,source_reference,effective_from,effective_to,status,published_at");\n    authorityUrl.searchParams.set("status", "eq.published");\n    authorityUrl.searchParams.set("order", "published_at.desc");\n    authorityUrl.searchParams.set("limit", "500");\n\n    const authorityResponse = await fetch(authorityUrl, {\n      headers: { apikey: key, Authorization: \`Bearer \${key}\` },\n      cache: "no-store",\n      signal: AbortSignal.timeout(8000),\n    });\n    const authorityRows = authorityResponse.ok\n      ? (await authorityResponse.json())\n          .filter((row: any) => {\n            const from = row.effective_from ? Date.parse(row.effective_from) : -Infinity;\n            const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;\n            return from <= Date.now() && Date.now() <= to;\n          })\n          .filter((row: any) => !regionCode || row.region_code === regionCode)\n          .map((row: any) => ({\n            ...row,\n            __authorityPublished: true,\n            source_id: {\n              id: row.id,\n              organization_name: row.authority_name,\n              source_url: row.source_document_url || "",\n              title: row.source_document_title || "Authority-published tariff",\n              published_at: row.published_at,\n              effective_from: row.effective_from,\n              status: "active",\n              verification_note: "Official authority submission • reviewed and published by ETHIO TRANSPORT.",\n            },\n          }))\n      : [];\n\n    const services = ["bus", "taxi", "rail"];
-    const services = ["bus", "taxi", "rail"];\n    const results: any[] = [];
+    const authorityUrl = new URL("/rest/v1/authority_fare_submissions", base);
+    authorityUrl.searchParams.set("select", "id,authority_user_id,authority_name,region_code,region_name,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,fare_scope,city_name,area_name,distance_min_km,distance_max_km,passenger_type,notes,source_document_url,source_document_title,source_reference,effective_from,effective_to,status,published_at");
+    authorityUrl.searchParams.set("status", "eq.published");
+    authorityUrl.searchParams.set("order", "published_at.desc");
+    authorityUrl.searchParams.set("limit", "500");
+
+    const authorityResponse = await fetch(authorityUrl, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    const authorityRows = authorityResponse.ok
+      ? (await authorityResponse.json())
+          .filter((row: any) => {
+            const from = row.effective_from ? Date.parse(row.effective_from) : -Infinity;
+            const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;
+            return from <= Date.now() && Date.now() <= to;
+          })
+          .filter((row: any) => !regionCode || row.region_code === regionCode)
+          .map((row: any) => ({
+            ...row,
+            __authorityPublished: true,
+            source_id: {
+              id: row.id,
+              organization_name: row.authority_name,
+              source_url: row.source_document_url || "",
+              title: row.source_document_title || "Authority-published tariff",
+              published_at: row.published_at,
+              effective_from: row.effective_from,
+              status: "active",
+              verification_note: "Official authority submission • reviewed and published by ETHIO TRANSPORT.",
+            },
+          }))
+      : [];
+
+    const services = ["bus", "taxi", "rail"];
+    const results: any[] = [];
 
     for (const serviceType of services) {
       const candidates = [...authorityRows]
