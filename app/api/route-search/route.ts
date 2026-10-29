@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 
 const json=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{"Cache-Control":"public, s-maxage=60, stale-while-revalidate=600"}});
@@ -32,6 +34,22 @@ function parseCsvLine(line:string){
     cur+=c;
   }
   out.push(cur); return out;
+}
+
+async function snapshotAddisDetails(routes:RouteRow[]){
+  try{
+    const file=path.join(process.cwd(),"public","data","addis-gtfs-routes.json");
+    const raw=await readFile(file,"utf8");
+    const data=JSON.parse(raw);
+    return routes.map(r=>{
+      const g=data.routes?.[String(r.route_code||"").trim()];
+      if(!g)return r;
+      const allStops=(g.directions||[]).flatMap((d:any)=>d.stops||[]);
+      const seen=new Set<string>();
+      const stops=allStops.filter((s:any)=>{if(seen.has(s.id))return false;seen.add(s.id);return true;});
+      return {...r,gtfs_route_id:String(g.route_id),stops,stopCount:stops.length,directions:g.directions||[],stopSource:"AddisMapTransit GTFS snapshot / OpenStreetMap",gtfsSnapshotGeneratedAt:data.generatedAt};
+    });
+  }catch{return routes;}
 }
 
 async function liveAddisDetails(routes:RouteRow[]){
@@ -128,7 +146,10 @@ export async function GET(request:NextRequest){
       const live=await liveAddisRoutes(origin,destination);
       if(live.length){matches=live;coverage="live_addis_gtfs_fallback";sourceVerification="Community-mapped/OSM-validated GTFS; not government certification.";}
     }
-    const enrichedMatches = matches.length ? await liveAddisDetails(matches) : matches;
+    const snapshotMatches = matches.length ? await snapshotAddisDetails(matches) : matches;
+    const enrichedMatches = snapshotMatches.some((r:any)=>Number(r.stopCount||0)>0)
+      ? snapshotMatches
+      : (matches.length ? await liveAddisDetails(matches) : matches);
     return json({
       origin,destination,coverage,sourceVerification,
       routeCount:enrichedMatches.length,routes:enrichedMatches,
