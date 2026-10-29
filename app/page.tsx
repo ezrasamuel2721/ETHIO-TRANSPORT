@@ -45,7 +45,9 @@ const operators = [
  ["Limalimo","https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=900&q=80"]
 ];
 
-const EMERGENCY_REGION_NAMES = ["Addis Ababa","Afar","Amhara","Benishangul-Gumuz","Central Ethiopia","Dire Dawa","Gambela","Harari","Oromia","Sidama","Somali","South Ethiopia","South West Ethiopia","Tigray"];\n\nconst emergencyVisualSets: Record<string,string[]> = {
+const EMERGENCY_REGION_NAMES = ["Addis Ababa","Afar","Amhara","Benishangul-Gumuz","Central Ethiopia","Dire Dawa","Gambela","Harari","Oromia","Sidama","Somali","South Ethiopia","South West Ethiopia","Tigray"];
+
+const emergencyVisualSets: Record<string,string[]> = {
   default:[
     "https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=1200&q=85",
     "https://images.unsplash.com/photo-1587745416684-47953f96cac9?auto=format&fit=crop&w=1200&q=85",
