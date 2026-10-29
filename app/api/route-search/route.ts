@@ -128,10 +128,11 @@ export async function GET(request:NextRequest){
       const live=await liveAddisRoutes(origin,destination);
       if(live.length){matches=live;coverage="live_addis_gtfs_fallback";sourceVerification="Community-mapped/OSM-validated GTFS; not government certification.";}
     }
+    const enrichedMatches = matches.length ? await liveAddisDetails(matches) : matches;
     return json({
       origin,destination,coverage,sourceVerification,
-      routeCount:matches.length,routes:matches,
-      message:matches.length
+      routeCount:enrichedMatches.length,routes:enrichedMatches,
+      message:enrichedMatches.length
         ?"Transport route records matched the requested places."
         :"No verified/community-sourced route record currently matches these places; no route is being invented."
     });
