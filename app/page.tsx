@@ -365,7 +365,7 @@ export default function Home(){
     </div>
     {quickFare?.needsRegionSelection&&<div className="info-strip">
       <strong>{lang==="am"?"መነሻና መድረሻው በተለያዩ ክልሎች ተገኝተዋል። የሚመለከተውን የታሪፍ ሥርዓት ይምረጡ።":lang==="en"?"The two locations are in different regions. Choose the fare system to use.":"Bakka lamaan isaanii naannoo adda addaa keessa jiru. Sirna kaffaltii filadhu."}</strong>
-      <select value={quickRegion} onChange={e=>{setQuickRegion(e.target.value);setTimeout(()=>searchQuickFare(),0)}}><option value="">{lang==="am"?"ክልል ይምረጡ":"Choose region"}</option>{(quickFare.regionOptions||[]).map((code:string)=><option key={code} value={code}>{code}</option>)}</select>
+      <select value={quickRegion} onChange={e=>setQuickRegion(e.target.value)}><option value="">{lang==="am"?"ክልል ይምረጡ":"Choose region"}</option>{(quickFare.regionOptions||[]).map((code:string)=><option key={code} value={code}>{code}</option>)}</select><button className="primary" type="button" disabled={!quickRegion||quickFareLoading} onClick={()=>searchQuickFare()}>{lang==="am"?"ታሪፍ አሳይ":"Show fare"}</button>
     </div>}
     {quickFare&&!quickFare.needsRegionSelection&&<div className="feature-form">
       <div className="route-result"><div><span>{L.from}</span><strong>{quickFare.origin?.display||quickOrigin}</strong></div><div><span>{L.to}</span><strong>{quickFare.destination?.display||quickDestination}</strong></div><div><span>{L.distance}</span><strong>{quickFare.distanceKm} km</strong></div><div><span>{DETAIL_LABELS[lang].travelTime}</span><strong>{quickFare.durationMinutes!=null?quickFare.durationMinutes+" min":"—"}</strong></div></div>
