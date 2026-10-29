@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
     // The authority workflow is the only public source for current fares.
     const authorityUrl = new URL("/rest/v1/authority_fare_submissions", base);
     authorityUrl.searchParams.set("select", "id,authority_user_id,authority_name,region_code,region_name,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,fare_scope,city_name,area_name,distance_min_km,distance_max_km,passenger_type,notes,source_document_url,source_document_title,source_reference,effective_from,effective_to,status,published_at");
-    authorityUrl.searchParams.set("status", "eq.published");
+    authorityUrl.searchParams.set("status", "eq.active");
     authorityUrl.searchParams.set("order", "published_at.desc");
     authorityUrl.searchParams.set("limit", "500");
 
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
               published_at: row.published_at,
               effective_from: row.effective_from,
               status: "active",
-              verification_note: "Official authority submission • reviewed and published by ETHIO TRANSPORT.",
+              verification_note: "Official authority submission • published directly by the authorized authority.",
             },
           }))
       : [];
