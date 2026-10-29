@@ -223,11 +223,49 @@ export async function GET(request: NextRequest) {
       return !row.region_code || row.region_code === regionCode;
     });
 
+    // Authority-published fares are the preferred live source. They are submitted
+    // by authenticated transport offices, reviewed by an ETHIO TRANSPORT reviewer,
+    // and exposed publicly only after status becomes "published".
+    const authorityUrl = new URL("/rest/v1/authority_fare_submissions", base);
+    authorityUrl.searchParams.set("select", "id,authority_user_id,authority_name,region_code,region_name,service_type,vehicle_category,rate_per_km,base_fare,minimum_fare,fixed_fare,currency,fare_scope,city_name,area_name,distance_min_km,distance_max_km,passenger_type,notes,source_document_url,source_document_title,source_reference,effective_from,effective_to,status,published_at");
+    authorityUrl.searchParams.set("status", "eq.published");
+    authorityUrl.searchParams.set("order", "published_at.desc");
+    authorityUrl.searchParams.set("limit", "500");
+
+    const authorityResponse = await fetch(authorityUrl, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    const authorityRows = authorityResponse.ok
+      ? (await authorityResponse.json())
+          .filter((row: any) => {
+            const from = row.effective_from ? Date.parse(row.effective_from) : -Infinity;
+            const to = row.effective_to ? Date.parse(row.effective_to) : Infinity;
+            return from <= Date.now() && Date.now() <= to;
+          })
+          .filter((row: any) => !regionCode || row.region_code === regionCode)
+          .map((row: any) => ({
+            ...row,
+            __authorityPublished: true,
+            source_id: {
+              id: row.id,
+              organization_name: row.authority_name,
+              source_url: row.source_document_url || "",
+              title: row.source_document_title || "Authority-published tariff",
+              published_at: row.published_at,
+              effective_from: row.effective_from,
+              status: "active",
+              verification_note: "Official authority submission • reviewed and published by ETHIO TRANSPORT.",
+            },
+          }))
+      : [];
+
     const services = ["bus", "taxi", "rail"];
     const results: any[] = [];
 
     for (const serviceType of services) {
-      const candidates = rows
+      const candidates = [...rows, ...authorityRows]
         .filter((row: any) => row.service_type === serviceType)
         .filter((row: any) => matchesDistance(row, distanceKm))
         .filter((row: any) => {
@@ -237,9 +275,12 @@ export async function GET(request: NextRequest) {
         .map((row: any) => ({ ...row, calculated_fare: calculateFare(row, distanceKm) }))
         .filter((row: any) => row.calculated_fare != null)
         .sort((x: any, y: any) => {
+          const xAuthority = Boolean(x.__authorityPublished);
+          const yAuthority = Boolean(y.__authorityPublished);
           const xOfficial = /^Official/i.test(String(x.source_id?.verification_note || ""));
           const yOfficial = /^Official/i.test(String(y.source_id?.verification_note || ""));
-          return Number(yOfficial) - Number(xOfficial) ||
+          return Number(yAuthority) - Number(xAuthority) ||
+            Number(yOfficial) - Number(xOfficial) ||
             Number(y.effective_from ? Date.parse(y.effective_from) : 0) -
             Number(x.effective_from ? Date.parse(x.effective_from) : 0);
         });
