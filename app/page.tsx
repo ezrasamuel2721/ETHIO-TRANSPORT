@@ -231,7 +231,13 @@ export default function Home(){
     const r=await fetch("/api/routes?origin="+encodeURIComponent(origin)+"&destination="+encodeURIComponent(destination),{cache:"no-store"});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"Route unavailable");
-    setRouteData({...d,requestedOrigin:origin.trim(),requestedDestination:destination.trim()});
+    let matchedRoutes:any[]=[];
+    try{
+      const rr=await fetch("/api/route-search?origin="+encodeURIComponent(origin)+"&destination="+encodeURIComponent(destination),{cache:"no-store"});
+      const rd=await rr.json();
+      if(rr.ok&&Array.isArray(rd.routes))matchedRoutes=rd.routes;
+    }catch{}
+    setRouteData({...d,matchedRoutes,requestedOrigin:origin.trim(),requestedDestination:destination.trim()});
    }catch(e:any){setStatus(e?.message||"Route service unavailable.");}
    finally{setRouteLoading(false);}
   }
@@ -352,7 +358,7 @@ export default function Home(){
    <div className="modal-hero"><img src={selected?.image} alt="" /><div><span className="eyebrow dark">{L.active}</span><h2 id="service-title">{serviceText(lang,active).title}</h2></div><button className="close" onClick={()=>setActive(null)}>{L.close} ×</button></div>
    <div className="modal-content">
 
-   {active==="origin"&&<form className="feature-form" onSubmit={findRoute}><div className="form-grid"><label>{L.from}<input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder={L.from}/></label><label>{L.to}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={L.to}/></label><label>{L.date}<input type="date" value={tripDate} onChange={e=>setTripDate(e.target.value)}/></label></div><div className="action-row"><button className="primary" disabled={routeLoading}>🧭 {routeLoading?(DETAIL_LABELS[lang].finding):L.find}</button>{routeData&&<a className="outline" target="_blank" rel="noreferrer" href={routeData.mapsUrl}>{L.map} ↗</a>}</div>{routeData&&<div className="route-result"><div><span>{L.distance}</span><strong>{routeData.distanceKm} km</strong></div><div><span>{DETAIL_LABELS[lang].travelTime}</span><strong>{routeData.durationMinutes!=null?Math.round(routeData.durationMinutes)+" min":"—"}</strong></div><small>{routeData.estimated?DETAIL_LABELS[lang].estimated:routeData.provider}</small></div>}{status&&<div className="info-strip"><strong>{status}</strong></div>}<div className="info-strip"><strong>{L.routeNote}</strong></div></form>}
+   {active==="origin"&&<form className="feature-form" onSubmit={findRoute}><div className="form-grid"><label>{L.from}<input value={origin} onChange={e=>setOrigin(e.target.value)} placeholder={L.from}/></label><label>{L.to}<input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={L.to}/></label><label>{L.date}<input type="date" value={tripDate} onChange={e=>setTripDate(e.target.value)}/></label></div><div className="action-row"><button className="primary" disabled={routeLoading}>🧭 {routeLoading?(DETAIL_LABELS[lang].finding):L.find}</button>{routeData&&<a className="outline" target="_blank" rel="noreferrer" href={routeData.mapsUrl}>{L.map} ↗</a>}</div>{routeData&&<div className="route-result"><div><span>{L.distance}</span><strong>{routeData.distanceKm} km</strong></div><div><span>{DETAIL_LABELS[lang].travelTime}</span><strong>{routeData.durationMinutes!=null?Math.round(routeData.durationMinutes)+" min":"—"}</strong></div><small>{routeData.estimated?DETAIL_LABELS[lang].estimated:routeData.provider}</small></div>}{routeData&&Array.isArray(routeData.matchedRoutes)&&routeData.matchedRoutes.length>0&&<div className="source-list" style={{marginTop:14}}><h3>{lang==="am"?"የተገኙ የህዝብ መጓጓዣ መስመሮች":"Matched public transport routes"}</h3>{routeData.matchedRoutes.slice(0,5).map((r:any,i:number)=><div className="source-item" key={String(r.id||r.route_code||i)}><div><strong>🚌 {r.route_code||r.name||"Route"}</strong><small>{r.origin||"—"} ↔ {r.destination||"—"} • {r.stopCount||0} {lang==="am"?"ማቆሚያዎች":"stops"}</small><small>{r.stopSource||r.source?.name||"Transport data source"}</small></div></div>)}</div>}{status&&<div className="info-strip"><strong>{status}</strong></div>}<div className="info-strip"><strong>{L.routeNote}</strong></div></form>}
 
    {active==="fare"&&<div className="feature-form">
     <div className="fare-layout">
