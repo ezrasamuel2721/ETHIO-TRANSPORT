@@ -121,7 +121,9 @@ export async function POST(request: Request) {
       evidence,
       status: "received",
       routed_authority_name: authorityName,
-      delivery_status: authorityConfigured ? "routed" : "pending_official_submission",\n      routed_at: authorityConfigured ? new Date().toISOString() : null,\n      last_status_at: new Date().toISOString()
+      delivery_status: authorityConfigured ? "routed" : "pending_official_submission",
+      routed_at: authorityConfigured ? new Date().toISOString() : null,
+      last_status_at: new Date().toISOString()
     };
 
     if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Complaint storage is not configured; the report was not saved." }, { status: 503 });
@@ -145,7 +147,8 @@ export async function POST(request: Request) {
     }
 
     let delivered = false;
-    let deliveryStatus = authorityConfigured ? "routed" : "pending_official_submission";\n    let deliveryError: string | null = null;
+    let deliveryStatus = authorityConfigured ? "routed" : "pending_official_submission";
+    let deliveryError: string | null = null;
     const webhook = authorityEndpoint || process.env.TRANSPORT_COMPLAINT_WEBHOOK_URL;
 
     if (webhook) {
@@ -157,9 +160,11 @@ export async function POST(request: Request) {
           signal: AbortSignal.timeout(10000)
         });
         delivered = notification.ok;
-        deliveryStatus = notification.ok ? "delivered" : "failed";\n        if (!notification.ok) deliveryError = (await notification.text()).slice(0, 300);
+        deliveryStatus = notification.ok ? "delivered" : "failed";
+        if (!notification.ok) deliveryError = (await notification.text()).slice(0, 300);
       } catch {
-        deliveryStatus = "failed";\n        deliveryError = "Official endpoint could not be reached.";
+        deliveryStatus = "failed";
+        deliveryError = "Official endpoint could not be reached.";
       }
     }
 
