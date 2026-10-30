@@ -65,3 +65,13 @@
 .emergency-region-message{margin:5px 0 0;max-width:100%;padding:7px 11px;border:1px solid rgba(255,255,255,.28);border-radius:11px;background:rgba(0,25,16,.5);backdrop-filter:blur(5px);font-size:11px;font-weight:800;line-height:1.32;color:#fff}
 .emergency-region-message b{display:block;margin-bottom:2px;font-size:9px;font-weight:950;letter-spacing:.35px;opacity:.92}
 @media(max-width:620px){.emergency-region-photo{height:205px}.emergency-region-message{font-size:10px;padding:6px 9px}.emergency-region-message b{font-size:8px}}
+
+
+/* Complaint evidence */
+.report-step{display:flex;gap:12px;align-items:center;margin:4px 0 14px;padding:12px 14px;border:1px solid rgba(15,23,42,.08);border-radius:16px;background:linear-gradient(135deg,#f8fafc,#eefbf5)}
+.report-step>span{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:900;background:#111827;color:#fff;font-size:12px}
+.report-step strong,.report-step small{display:block}.report-step small{margin-top:3px;opacity:.68;font-size:12px}
+.evidence-box{border:1px solid rgba(15,23,42,.1);border-radius:18px;padding:14px;margin:14px 0;background:#fff}
+.evidence-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.evidence-head strong,.evidence-head small{display:block}.evidence-head small{font-size:12px;opacity:.65;margin-top:3px}.evidence-head>span{font-weight:800;font-size:12px;opacity:.7}
+.evidence-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.evidence-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;padding:11px 14px;border-radius:12px;border:1px solid rgba(15,23,42,.1);background:#f8fafc;cursor:pointer;font-weight:800;font-size:13px}
+.evidence-list{display:grid;gap:8px;margin-top:12px}.evidence-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:#f8fafc}.evidence-item strong{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.evidence-item small{font-size:11px;opacity:.6}.evidence-item button{border:0;background:transparent;font-size:20px;cursor:pointer;opacity:.65}
