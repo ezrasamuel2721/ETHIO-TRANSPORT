@@ -26,7 +26,7 @@ const cityAuthority = (city: string) => {
 
 async function uploadEvidence(reference: string, files: File[]) {
   if (!files.length) return [];
-  if (!supabaseUrl || !supabaseSecret) throw new Error("Evidence storage is not configured.");
+  if (!supabaseUrl || !(supabaseSecret || supabaseKey)) throw new Error("Evidence storage is not configured.");
   const out: any[] = [];
   for (const file of files.slice(0, MAX_FILES)) {
     if (file.size > MAX_FILE_BYTES) throw new Error("Each evidence file must be 25 MB or smaller.");
@@ -49,7 +49,7 @@ async function uploadEvidence(reference: string, files: File[]) {
       const detail = await response.text();
       throw new Error("Evidence upload failed: " + detail.slice(0, 180));
     }
-    out.push({ path, name: file.name, type: file.type, size: file.size });
+    out.push({ path, name: file.name, type: file.type, size: file.size, url: supabaseUrl + "/storage/v1/object/public/" + evidenceBucket + "/" + path });
   }
   return out;
 }
