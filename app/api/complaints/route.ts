@@ -50,7 +50,7 @@ async function uploadEvidence(reference: string, files: File[]) {
       const detail = await response.text();
       throw new Error("Evidence upload failed: " + detail.slice(0, 180));
     }
-    out.push({ path, name: file.name, type: file.type, size: file.size, url: supabaseUrl + "/storage/v1/object/public/" + evidenceBucket + "/" + path });
+    out.push({ path, name: file.name, type: file.type, size: file.size });
   }
   return out;
 }
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       evidence,
       status: "received",
       routed_authority_name: authorityName,
-      delivery_status: "pending"
+      delivery_status: authorityConfigured ? "routed" : "pending_official_submission",\n      routed_at: authorityConfigured ? new Date().toISOString() : null,\n      last_status_at: new Date().toISOString()
     };
 
     if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: "Complaint storage is not configured; the report was not saved." }, { status: 503 });
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
     }
 
     let delivered = false;
-    let deliveryStatus = "pending";
+    let deliveryStatus = authorityConfigured ? "routed" : "pending_official_submission";\n    let deliveryError: string | null = null;
     const webhook = authorityEndpoint || process.env.TRANSPORT_COMPLAINT_WEBHOOK_URL;
 
     if (webhook) {
@@ -157,9 +157,9 @@ export async function POST(request: Request) {
           signal: AbortSignal.timeout(10000)
         });
         delivered = notification.ok;
-        deliveryStatus = notification.ok ? "delivered" : "failed";
+        deliveryStatus = notification.ok ? "delivered" : "failed";\n        if (!notification.ok) deliveryError = (await notification.text()).slice(0, 300);
       } catch {
-        deliveryStatus = "failed";
+        deliveryStatus = "failed";\n        deliveryError = "Official endpoint could not be reached.";
       }
     }
 
