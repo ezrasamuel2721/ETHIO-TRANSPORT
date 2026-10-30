@@ -38,8 +38,8 @@ async function uploadEvidence(reference: string, files: File[]) {
     const response = await fetch(supabaseUrl + "/storage/v1/object/" + evidenceBucket + "/" + path, {
       method: "POST",
       headers: {
-        apikey: supabaseSecret,
-        Authorization: "Bearer " + supabaseSecret,
+        apikey: supabaseSecret || supabaseKey,
+        Authorization: "Bearer " + (supabaseSecret || supabaseKey),
         "Content-Type": file.type || "application/octet-stream",
         "x-upsert": "false"
       },
