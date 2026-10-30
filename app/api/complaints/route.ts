@@ -4,6 +4,7 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const evidenceBucket = "complaint-evidence";
+const storageKey = supabaseSecret || supabaseKey;
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
@@ -38,8 +39,8 @@ async function uploadEvidence(reference: string, files: File[]) {
     const response = await fetch(supabaseUrl + "/storage/v1/object/" + evidenceBucket + "/" + path, {
       method: "POST",
       headers: {
-        apikey: supabaseSecret || supabaseKey,
-        Authorization: "Bearer " + (supabaseSecret || supabaseKey),
+        apikey: storageKey!,
+        Authorization: "Bearer " + storageKey!,
         "Content-Type": file.type || "application/octet-stream",
         "x-upsert": "false"
       },
