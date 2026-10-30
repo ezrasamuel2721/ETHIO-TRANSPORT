@@ -92,6 +92,7 @@ export async function POST(request: Request) {
 
     const reference = text(body?.reference, 80) || "ET-" + Date.now();
     let authorityName = cityAuthority(city);
+    let authorityConfigured = false;
     let authorityEndpoint = "";
     if (supabaseUrl && supabaseKey) {
       try {
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
           const rows = await lookup.json();
           if (Array.isArray(rows) && rows[0]) {
             authorityName = rows[0].authority_name || authorityName;
+            authorityConfigured = true;
             authorityEndpoint = rows[0].endpoint_url || "";
           }
         }
