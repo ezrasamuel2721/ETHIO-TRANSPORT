@@ -90,7 +90,20 @@ export async function POST(request: Request) {
     if (longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) return NextResponse.json({ error: "Invalid longitude." }, { status: 400 });
 
     const reference = text(body?.reference, 80) || "ET-" + Date.now();
-    const authorityName = cityAuthority(city);
+    let authorityName = cityAuthority(city);
+    let authorityEndpoint = "";
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const lookup = await fetch(supabaseUrl + "/rest/v1/transport_complaint_authorities?city_name=eq." + encodeURIComponent(city) + "&active=eq.true&select=authority_name,endpoint_url&limit=1", { headers: { apikey: supabaseKey, Authorization: "Bearer " + supabaseKey }, cache: "no-store" });
+        if (lookup.ok) {
+          const rows = await lookup.json();
+          if (Array.isArray(rows) && rows[0]) {
+            authorityName = rows[0].authority_name || authorityName;
+            authorityEndpoint = rows[0].endpoint_url || "";
+          }
+        }
+      } catch {}
+    }
     const evidence = await uploadEvidence(reference, files);
 
     const record: any = {
@@ -132,7 +145,7 @@ export async function POST(request: Request) {
 
     let delivered = false;
     let deliveryStatus = "pending";
-    const webhook = process.env.TRANSPORT_COMPLAINT_WEBHOOK_URL;
+    const webhook = authorityEndpoint || process.env.TRANSPORT_COMPLAINT_WEBHOOK_URL;
 
     if (webhook) {
       try {
