@@ -227,7 +227,7 @@ async function flushQueuedActions(){if(!navigator.onLine)return;const current=lo
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0), [cardVisualIndex,setCardVisualIndex]=useState(0);
  const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[membershipCheckFailed,setMembershipCheckFailed]=useState(false),[customerRef,setCustomerRef]=useState("");
- const [ownerActivationCode,setOwnerActivationCode]=useState(""),[ownerActivationMessage,setOwnerActivationMessage]=useState(""),[ownerActivationLoading,setOwnerActivationLoading]=useState(false);
+ const [ownerActivationCode,setOwnerActivationCode]=useState(""),[ownerActivationMessage,setOwnerActivationMessage]=useState(""),[ownerActivationLoading,setOwnerActivationLoading]=useState(false);\n const [authorizedAccessOpen,setAuthorizedAccessOpen]=useState(false),[authorizedAccessCode,setAuthorizedAccessCode]=useState(""),[authorizedAccessMessage,setAuthorizedAccessMessage]=useState(""),[authorizedAccessLoading,setAuthorizedAccessLoading]=useState(false);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
  const [fareKm,setFareKm]=useState(""),[fareRate,setFareRate]=useState(""),[fareResult,setFareResult]=useState<number|null>(null),[fareType,setFareType]=useState("bus"),[fareSource,setFareSource]=useState(""),[fareLoading,setFareLoading]=useState(false),[fareRegions,setFareRegions]=useState<any[]>([]),[fareRegion,setFareRegion]=useState(""),[fareCity,setFareCity]=useState(""),[fareArea,setFareArea]=useState(""),[fareCategory,setFareCategory]=useState(""),[fareRow,setFareRow]=useState<any>(null),[fareSources,setFareSources]=useState<any[]>([]),[fareSourcesLoading,setFareSourcesLoading]=useState(false),[fareLiveInfo,setFareLiveInfo]=useState<any[]>([]);
  const [routeData,setRouteData]=useState<any>(null),[routeLoading,setRouteLoading]=useState(false);
@@ -406,7 +406,7 @@ export default function Home(){
  async function submitReport(e:FormEvent){e.preventDefault();if(!report.city.trim()){setStatus(lang==="am"?"ከተማ ይምረጡ።":"Select a city.");return}if(!report.plate.trim()){setStatus(lang==="am"?"የመኪና ታርጋ ቁጥር ያስገቡ።":"Enter the vehicle plate number.");return}const id="ET-"+new Date().toISOString().replace(/\D/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,7).toUpperCase();const form=new FormData();Object.entries({...report,reference:id,createdAt:new Date().toISOString(),latitude:coords?.lat??"",longitude:coords?.lon??""}).forEach(([k,v])=>form.append(k,String(v??"")));evidenceFiles.forEach(f=>form.append("evidence",f,f.name));try{const r=await fetch("/api/complaints",{method:"POST",body:form});if(r.ok){const d=await r.json();setRef(d.reference||id);setStatus(d.delivered?(lang==="am"?"✓ ቅሬታዎ ለተጠሪው አካል ደርሷል።":"✓ Your report was delivered to the responsible authority."):d.deliveryStatus==="routed"?(lang==="am"?"✓ ቅሬታዎ ለተጠሪው አካል ተመርጧል፤ ቀጥታ መላኪያ ገና አልተረጋገጠም።":"✓ Your report is routed to the responsible authority; direct delivery is not yet verified."):d.deliveryStatus==="pending_official_submission"?(lang==="am"?"✓ ቅሬታዎ ተቀምጧል፤ የባለሥልጣኑ ኦፊሴላዊ የመላኪያ ቻናል ገና አልተገናኘም።":"✓ Your report is saved; the authority's official submission channel is not yet connected."):L.received);setEvidenceFiles([]);return}queueAction({id:"complaint-"+id,url:"/api/complaints",method:"POST",body:{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}})}catch{queueAction({id:"complaint-"+id,url:"/api/complaints",method:"POST",body:{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}})}save("ethio_transport_reports",[...load<any[]>("ethio_transport_reports",[]),{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}].slice(-50));setRef(id);setStatus(L.pending)}
  function saveAccess(){save("ethio_transport_accessibility",{need:accessNeed,savedAt:new Date().toISOString()});setStatus(L.saved)}
  function saveParcel(){if(!parcel.from||!parcel.to||!parcel.description){setStatus("Complete the form first.");return}save("ethio_transport_parcel",parcel);setStatus(L.saved)}
- async function activateOwnerAccess(){
+ async function activateAuthorizedAccess(){\n   if(!customerRef||!authorizedAccessCode.trim()){setAuthorizedAccessMessage("");return}\n   setAuthorizedAccessLoading(true);setAuthorizedAccessMessage("");\n   try{\n     const response=await fetch("/api/membership/claim-authorized",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({customerRef,accessCode:authorizedAccessCode.trim()}),cache:"no-store"});\n     const data=await response.json();\n     if(!response.ok||!data?.authorized) throw new Error(data?.error||(lang==="am"?"ማረጋገጫው አልተሳካም።":"Access verification failed."));\n     setAuthorizedAccessCode("");\n     window.location.reload();\n   }catch(error:any){setAuthorizedAccessMessage(error?.message||"");}\n   finally{setAuthorizedAccessLoading(false)}\n }\n\n async function activateOwnerAccess(){
    if(!customerRef||!ownerActivationCode.trim()) {setOwnerActivationMessage(lang==="am"?"የማረጋገጫ ኮዱን ያስገቡ።":"Enter the owner activation code.");return}
    setOwnerActivationLoading(true);setOwnerActivationMessage("");
    try{
@@ -435,7 +435,8 @@ export default function Home(){
     </section></main>;
   }
   return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
-    <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}>
+    <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)",position:"relative"}}>
+      <button type="button" aria-label="Access" title="" onClick={()=>{setAuthorizedAccessOpen(true);setAuthorizedAccessMessage("")}} style={{position:"absolute",right:14,top:14,width:34,height:34,border:0,borderRadius:"50%",background:"transparent",fontSize:20,cursor:"pointer"}}>🔑</button>
       <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT</div>
       <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"አገልግሎቱን ለመጠቀም አባልነት ያስፈልጋል":"Membership required"}</h1>
       <p style={{fontSize:16,fontWeight:700,lineHeight:1.8}}>{lang==="am"?"እባክዎ ቀድመው አባል ይሁኑ!":"Please become a member first."}</p>
@@ -448,6 +449,15 @@ export default function Home(){
         <div style={{marginTop:6,wordBreak:"break-all",fontFamily:"monospace"}}>{customerRef}</div>
       </div>
       <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"block",marginTop:16,padding:"15px 20px",borderRadius:14,textDecoration:"none",textAlign:"center",fontWeight:900,background:"#176b4a",color:"#fff"}}>{lang==="am"?"250 ብር ክፈል → አባልነት ክፈት":"Pay 250 ETB → Activate Membership"}</a>
+      {authorizedAccessOpen&&<div onMouseDown={e=>{if(e.target===e.currentTarget)setAuthorizedAccessOpen(false)}} style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",padding:20,background:"rgba(0,0,0,.55)"}}>
+        <div style={{width:"min(360px,100%)",background:"#fff",borderRadius:20,padding:22,boxShadow:"0 24px 80px rgba(0,0,0,.25)"}}>
+          <form onSubmit={e=>{e.preventDefault();activateAuthorizedAccess()}}>
+            <input autoFocus type="password" value={authorizedAccessCode} onChange={e=>setAuthorizedAccessCode(e.target.value)} aria-label="Code" style={{width:"100%",boxSizing:"border-box",padding:"14px 15px",border:"1px solid #dfe9e3",borderRadius:12,outline:"none",fontSize:18,letterSpacing:2}} />
+            <button type="submit" disabled={authorizedAccessLoading||!authorizedAccessCode.trim()} style={{width:"100%",marginTop:12,padding:"13px 16px",border:0,borderRadius:12,background:"#176b4a",color:"#fff",fontWeight:900,cursor:"pointer"}}>{authorizedAccessLoading?"…":(lang==="am"?"ግባ":"Enter")}</button>
+            {authorizedAccessMessage&&<div style={{marginTop:10,fontSize:13,color:"#a11",fontWeight:700}}>{authorizedAccessMessage}</div>}
+          </form>
+        </div>
+      </div>}
     </div>
   </section></main>;
 }
