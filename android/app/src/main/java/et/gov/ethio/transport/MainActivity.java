@@ -3,8 +3,9 @@ package et.gov.ethio.transport;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
+import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -15,12 +16,19 @@ import androidx.webkit.WebViewFeature;
 public class MainActivity extends AppCompatActivity {
     private WebView web;
     private WebView startupOverlay;
-    private static final String START_URL = "https://ethio-transport.vercel.app/?app_version=1.0.7";
+    private static final String START_URL =
+            "https://ethio-transport.vercel.app/?app_version=1.0.8&native_recovery=1";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Clear browser state that can keep an old WebView shell or service-worker data.
+        WebStorage.getInstance().deleteAllData();
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.removeAllCookies(null);
+        cookieManager.flush();
 
         FrameLayout root = new FrameLayout(this);
 
@@ -65,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 if (startupOverlay != null) {
-                    startupOverlay.setVisibility(View.GONE);
+                    startupOverlay.setVisibility(android.view.View.GONE);
                 }
             }
         });
