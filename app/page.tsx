@@ -259,33 +259,43 @@ export default function Home(){
    setCustomerRef(customerRef);
    let cancelled=false;
    const requestMembership=async()=>{
-     const url="/api/membership/status?customerRef="+encodeURIComponent(customerRef)+"&check="+Date.now();
-     try{
-       const response=await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"}});
+     const query="?customerRef="+encodeURIComponent(customerRef)+"&check="+Date.now();
+     const urls=["/api/membership/status"+query,"https://ethio-transport.vercel.app/api/membership/status"+query];
+     const parse=async(response:Response)=>{
        const raw=await response.text();
        if(!response.ok) throw new Error("Membership check failed: "+response.status);
        const data=JSON.parse(raw);
        if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
        return data;
-     }catch(fetchError){
-       return await new Promise<any>((resolve,reject)=>{
-         const xhr=new XMLHttpRequest();
-         xhr.open("GET",url,true);
-         xhr.setRequestHeader("Accept","application/json");
-         xhr.timeout=10000;
-         xhr.onload=()=>{
-           try{
-             if(xhr.status<200||xhr.status>=300) throw new Error("Membership check failed: "+xhr.status);
-             const data=JSON.parse(xhr.responseText);
-             if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
-             resolve(data);
-           }catch(error){reject(error)}
-         };
-         xhr.onerror=()=>reject(new Error("Membership network error"));
-         xhr.ontimeout=()=>reject(new Error("Membership request timeout"));
-         xhr.send();
-       });
+     };
+     const request=async(url:string)=>{
+       try{
+         return await parse(await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"}}));
+       }catch(fetchError){
+         return await new Promise<any>((resolve,reject)=>{
+           const xhr=new XMLHttpRequest();
+           xhr.open("GET",url,true);
+           xhr.setRequestHeader("Accept","application/json");
+           xhr.timeout=10000;
+           xhr.onload=()=>{
+             try{
+               if(xhr.status<200||xhr.status>=300) throw new Error("Membership check failed: "+xhr.status);
+               const data=JSON.parse(xhr.responseText);
+               if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
+               resolve(data);
+             }catch(error){reject(error)}
+           };
+           xhr.onerror=()=>reject(new Error("Membership network error"));
+           xhr.ontimeout=()=>reject(new Error("Membership request timeout"));
+           xhr.send();
+         });
+       }
+     };
+     let lastError:any;
+     for(const url of urls){
+       try{return await request(url)}catch(error){lastError=error}
      }
+     throw lastError||new Error("Membership service unavailable");
    };
    const checkMembership=async()=>{
      for(let attempt=1;attempt<=6;attempt++){
