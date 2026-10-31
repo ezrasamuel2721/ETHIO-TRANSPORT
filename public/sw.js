@@ -1,4 +1,4 @@
-const CACHE_NAME = "ethio-transport-shell-v2";
+const CACHE_NAME = "ethio-transport-shell-v3";
 const DATA_CACHE = "ethio-transport-data-v1";
 const APP_SHELL = ["/","/manifest.webmanifest","/icons/icon.svg"];
 
