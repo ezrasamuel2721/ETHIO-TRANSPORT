@@ -251,7 +251,10 @@ export default function Home(){
  useEffect(()=>{
    const key="ethio_transport_customer_ref";
    let customerRef=localStorage.getItem(key);
-   if(!customerRef){customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");localStorage.setItem(key,customerRef);}
+   if(!customerRef || !/^[A-Za-z0-9_-]{16,80}$/.test(customerRef)){
+     customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");
+     localStorage.setItem(key,customerRef);
+   }
    setCustomerRef(customerRef);
    fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef),{cache:"no-store"})
      .then(async r=>{
