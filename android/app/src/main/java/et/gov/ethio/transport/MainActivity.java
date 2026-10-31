@@ -15,7 +15,7 @@ import androidx.webkit.WebViewFeature;
 public class MainActivity extends AppCompatActivity {
     private WebView web;
     private WebView startupOverlay;
-    private static final String START_URL = "https://ethio-transport.vercel.app/?app_version=1.0.5";
+    private static final String START_URL = "https://ethio-transport.vercel.app/?app_version=1.0.6&customer_ref=ETHIO-OWNER-2716";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
