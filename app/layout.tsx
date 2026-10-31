@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Ethiopia's public transport information and service platform",
   manifest: "/manifest.webmanifest",
   themeColor: "#006b3c",
-  icons: { icon: "/icons/icon.svg" },
+  icons: { icon: "/icons/icon.svg", apple: "/icons/icon.svg" },
 };
 
 export default function RootLayout({children}:{children:React.ReactNode}){
