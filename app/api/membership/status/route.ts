@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseRest } from "../../../../lib/payments/supabase";
+import { supabasePublicRest } from "../../../../lib/payments/supabase";
 
 function isPrivilegedCustomerRef(customerRef: string) {
   const configured = [
@@ -33,11 +33,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const rows = await supabaseRest<Array<Record<string,unknown>>>(
-      "transport_memberships?select=plan_code,status,starts_at,expires_at,amount,currency&customer_ref=eq." +
-      encodeURIComponent(customerRef) + "&limit=1"
+    const membership = await supabasePublicRest<Record<string,unknown> | null>(
+      "rpc/check_transport_membership",
+      {
+        method: "POST",
+        body: JSON.stringify({ p_customer_ref: customerRef }),
+      }
     );
-    const membership = rows?.[0] || null;
     const active = Boolean(
       membership?.status === "active" &&
       membership?.expires_at &&
