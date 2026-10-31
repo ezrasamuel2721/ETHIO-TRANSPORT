@@ -75,3 +75,116 @@
 .evidence-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.evidence-head strong,.evidence-head small{display:block}.evidence-head small{font-size:12px;opacity:.65;margin-top:3px}.evidence-head>span{font-weight:800;font-size:12px;opacity:.7}
 .evidence-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}.evidence-btn{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;padding:11px 14px;border-radius:12px;border:1px solid rgba(15,23,42,.1);background:#f8fafc;cursor:pointer;font-weight:800;font-size:13px}
 .evidence-list{display:grid;gap:8px;margin-top:12px}.evidence-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:#f8fafc}.evidence-item strong{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.evidence-item small{font-size:11px;opacity:.6}.evidence-item button{border:0;background:transparent;font-size:20px;cursor:pointer;opacity:.65}
+
+
+/* ETHIO TRANSPORT — three-second welcome screen with automatic sliding bus doors.
+   Background photo: Roeli Andréa, Unsplash (free under the Unsplash License). */
+.welcome-splash{
+ position:fixed;inset:0;z-index:100000;display:grid;place-items:center;overflow:hidden;
+ min-height:100vh;min-height:100dvh;padding:16px;background:#061a12;color:#fff;isolation:isolate;
+}
+.welcome-stage{
+ position:relative;display:grid;place-items:center;width:100%;height:100%;
+ min-height:calc(100vh - 32px);min-height:calc(100dvh - 32px);isolation:isolate;
+}
+.welcome-stage::before{
+ content:"";position:absolute;inset:-18px;z-index:-2;
+ background:
+  linear-gradient(135deg,rgba(2,25,17,.78),rgba(3,52,35,.58) 48%,rgba(1,17,12,.82)),
+  url("https://images.unsplash.com/photo-1688979610897-bc72efc8aa4a?auto=format&fit=crop&w=1800&q=88") center 48%/cover no-repeat;
+ filter:blur(5px) saturate(.86);transform:scale(1.04);
+}
+.welcome-stage::after{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 48%,transparent 20%,rgba(0,0,0,.5) 100%);
+}
+.welcome-bus-door{
+ position:relative;width:min(620px,90vw);height:min(720px,78vh);height:min(720px,78dvh);min-height:390px;
+ overflow:hidden;border:9px solid #19262c;border-bottom:16px solid #d8a72d;
+ border-radius:24px 24px 7px 7px;
+ background:
+  linear-gradient(180deg,rgba(7,19,25,.08),rgba(5,21,18,.12)),
+  url("https://images.unsplash.com/photo-1688979610897-bc72efc8aa4a?auto=format&fit=crop&w=1800&q=88") center 48%/cover no-repeat,
+  linear-gradient(140deg,#536b68,#142c27 65%,#081b14);
+ box-shadow:0 28px 85px rgba(0,0,0,.55),inset 0 0 0 2px rgba(255,255,255,.18);
+}
+.welcome-bus-door::before{
+ content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+ border:3px solid rgba(232,241,238,.35);
+ box-shadow:inset 0 0 35px rgba(0,0,0,.2);
+}
+.welcome-door-top{
+ position:absolute;z-index:5;top:0;left:0;right:0;height:13px;
+ background:linear-gradient(180deg,#b9c4c7,#39474d 45%,#152229);
+ box-shadow:0 3px 8px rgba(0,0,0,.35);
+}
+.welcome-door-panel{
+ position:absolute;top:0;bottom:0;width:50%;z-index:3;overflow:hidden;
+ background:
+  linear-gradient(90deg,rgba(7,18,25,.76),rgba(160,190,197,.23) 17%,rgba(50,75,82,.22) 76%,rgba(4,15,22,.72)),
+  linear-gradient(180deg,rgba(210,232,235,.20),rgba(15,32,38,.32) 48%,rgba(195,218,220,.17));
+ backdrop-filter:blur(2px);
+ box-shadow:inset 0 0 0 2px rgba(220,238,239,.38),inset 0 0 28px rgba(0,0,0,.24);
+ will-change:transform;
+}
+.welcome-door-panel::before{
+ content:"";position:absolute;top:0;bottom:0;width:5px;
+ background:linear-gradient(90deg,#1b2a30,#c4d0d1 48%,#26363c);
+ box-shadow:0 0 12px rgba(0,0,0,.35);
+}
+.welcome-door-panel::after{
+ content:"";position:absolute;top:43%;width:7px;height:82px;border-radius:8px;
+ background:linear-gradient(90deg,#75878a,#e2e9e8 48%,#52656a);
+ box-shadow:0 1px 7px rgba(0,0,0,.5);
+}
+.welcome-door-panel-left{left:0;border-right:4px solid rgba(12,24,29,.96);animation:welcomeDoorOpenLeft 1.08s cubic-bezier(.18,.76,.2,1) .08s forwards}
+.welcome-door-panel-left::before{right:0}
+.welcome-door-panel-left::after{right:17px}
+.welcome-door-panel-right{right:0;border-left:4px solid rgba(12,24,29,.96);animation:welcomeDoorOpenRight 1.08s cubic-bezier(.18,.76,.2,1) .08s forwards}
+.welcome-door-panel-right::before{left:0}
+.welcome-door-panel-right::after{left:17px}
+.welcome-door-threshold{
+ position:absolute;z-index:5;left:0;right:0;bottom:0;height:13px;
+ background:repeating-linear-gradient(135deg,#e7b332 0 16px,#26363a 16px 31px);
+ box-shadow:0 -3px 8px rgba(0,0,0,.3);
+}
+.welcome-message{
+ position:absolute;z-index:6;left:14px;right:14px;top:50%;transform:translateY(-35%);
+ display:grid;justify-items:center;gap:8px;text-align:center;
+ width:fit-content;max-width:calc(100% - 28px);margin:auto;padding:18px 28px;
+ border:1px solid rgba(255,255,255,.3);border-radius:18px;
+ background:rgba(0,28,19,.68);backdrop-filter:blur(12px);
+ box-shadow:0 16px 48px rgba(0,0,0,.38);
+ opacity:0;animation:welcomeMessageIn .48s ease-out .92s forwards;
+}
+.welcome-message span{font-size:11px;letter-spacing:2.6px;font-weight:950;color:#f5d56e}
+.welcome-message h1{
+ margin:0;font-size:clamp(25px,5vw,43px);line-height:1.3;font-weight:950;letter-spacing:.1px;
+ color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.55);white-space:normal;
+}
+.welcome-photo-credit{
+ position:absolute;right:10px;bottom:7px;z-index:7;color:rgba(255,255,255,.74);
+ font-size:9px;letter-spacing:.2px;text-shadow:0 1px 5px #000;
+}
+@keyframes welcomeDoorOpenLeft{0%,8%{transform:translateX(0)}100%{transform:translateX(-104%)}}
+@keyframes welcomeDoorOpenRight{0%,8%{transform:translateX(0)}100%{transform:translateX(104%)}}
+@keyframes welcomeMessageIn{from{opacity:0;transform:translateY(-25%) scale(.97)}to{opacity:1;transform:translateY(-35%) scale(1)}}
+@media(max-width:620px){
+ .welcome-splash{padding:9px}
+ .welcome-stage{min-height:calc(100dvh - 18px)}
+ .welcome-bus-door{width:min(620px,94vw);height:min(700px,76dvh);min-height:360px;border-width:7px;border-bottom-width:13px;border-radius:19px 19px 5px 5px}
+ .welcome-message{padding:15px 17px;gap:6px}
+ .welcome-message span{font-size:10px;letter-spacing:2px}
+ .welcome-message h1{font-size:clamp(23px,7vw,34px)}
+ .welcome-photo-credit{right:6px;bottom:3px;font-size:8px}
+}
+@media(max-height:560px){
+ .welcome-bus-door{height:76vh;min-height:300px}
+ .welcome-message{padding:11px 16px}
+}
+@media(prefers-reduced-motion:reduce){
+ .welcome-door-panel-left,.welcome-door-panel-right,.welcome-message{animation:none!important}
+ .welcome-door-panel-left{transform:translateX(-104%)}
+ .welcome-door-panel-right{transform:translateX(104%)}
+ .welcome-message{opacity:1;transform:translateY(-35%)}
+}
