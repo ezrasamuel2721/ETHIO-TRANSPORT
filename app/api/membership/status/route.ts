@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
   if (isPrivilegedCustomerRef(customerRef)) {
     return NextResponse.json({
       active: true,
-      owner: true,\n      authorized: true,
+      owner: true,
+      authorized: true,
       membership: {
         plan_code: "owner",
         status: "active",
