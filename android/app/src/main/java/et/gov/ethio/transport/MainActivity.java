@@ -1,61 +1,48 @@
 package et.gov.ethio.transport;
 
 import android.annotation.SuppressLint;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.graphics.Color;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
 public class MainActivity extends AppCompatActivity {
     private WebView web;
-    private View startupOverlay;
+    private WebView startupOverlay;
     private static final String START_URL = "https://ethio-transport.vercel.app/";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         FrameLayout root = new FrameLayout(this);
+
         web = new WebView(this);
         root.addView(web, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
 
-        FrameLayout overlay = new FrameLayout(this);
-        overlay.setBackgroundColor(Color.rgb(0, 107, 60));
+        startupOverlay = new WebView(this);
+        startupOverlay.setBackgroundColor(Color.WHITE);
+        WebSettings splashSettings = startupOverlay.getSettings();
+        splashSettings.setJavaScriptEnabled(false);
+        splashSettings.setAllowFileAccess(true);
+        splashSettings.setAllowContentAccess(false);
+        startupOverlay.setVerticalScrollBarEnabled(false);
+        startupOverlay.setHorizontalScrollBarEnabled(false);
+        startupOverlay.loadUrl("file:///android_asset/ethio_transport_logo.svg");
 
-        ImageView logo = new ImageView(this);
-        logo.setImageResource(et.gov.ethio.transport.R.drawable.ic_launcher);
-        logo.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        FrameLayout.LayoutParams logoParams = new FrameLayout.LayoutParams(180, 180);
-        logoParams.gravity = Gravity.CENTER;
-        logoParams.bottomMargin = 70;
-        overlay.addView(logo, logoParams);
-
-        TextView title = new TextView(this);
-        title.setText("ETHIO TRANSPORT");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(20);
-        title.setGravity(Gravity.CENTER);
-        FrameLayout.LayoutParams titleParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, 70);
-        titleParams.gravity = Gravity.CENTER;
-        titleParams.topMargin = 150;
-        overlay.addView(title, titleParams);
-
-        root.addView(overlay, new FrameLayout.LayoutParams(
+        root.addView(startupOverlay, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
-        startupOverlay = overlay;
+
         setContentView(root);
 
         WebSettings settings = web.getSettings();
@@ -79,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
         web.loadUrl(START_URL);
     }
 
@@ -93,6 +81,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (startupOverlay != null) {
+            startupOverlay.stopLoading();
+            startupOverlay.destroy();
+            startupOverlay = null;
+        }
         if (web != null) {
             web.stopLoading();
             web.setWebViewClient(null);
