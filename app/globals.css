@@ -91,7 +91,7 @@
  content:"";position:absolute;inset:-18px;z-index:-2;
  background:
   linear-gradient(135deg,rgba(2,25,17,.78),rgba(3,52,35,.58) 48%,rgba(1,17,12,.82)),
-  url("https://images.unsplash.com/photo-1688979610897-bc72efc8aa4a?auto=format&fit=crop&w=1800&q=88") center 48%/cover no-repeat;
+  url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Bus_addis_abeba.jpg") center 48%/cover no-repeat;
  filter:blur(5px) saturate(.86);transform:scale(1.04);
 }
 .welcome-stage::after{
@@ -104,7 +104,7 @@
  border-radius:24px 24px 7px 7px;
  background:
   linear-gradient(180deg,rgba(7,19,25,.08),rgba(5,21,18,.12)),
-  url("https://images.unsplash.com/photo-1688979610897-bc72efc8aa4a?auto=format&fit=crop&w=1800&q=88") center 48%/cover no-repeat,
+  url("https://commons.wikimedia.org/wiki/Special:Redirect/file/Bus_addis_abeba.jpg") center 48%/cover no-repeat,
   linear-gradient(140deg,#536b68,#142c27 65%,#081b14);
  box-shadow:0 28px 85px rgba(0,0,0,.55),inset 0 0 0 2px rgba(255,255,255,.18);
 }
