@@ -10,6 +10,7 @@ function isAuthorizedCustomerRef(customerRef: string) {
 
 export async function GET(request: NextRequest) {
   const customerRef = request.nextUrl.searchParams.get("customerRef") || "";
+
   if (!/^[A-Za-z0-9_-]{16,80}$/.test(customerRef)) {
     return NextResponse.json({ error: "Invalid customer reference." }, { status: 400 });
   }
@@ -34,8 +35,12 @@ export async function GET(request: NextRequest) {
     const supabaseBase = process.env.SUPABASE_URL;
     if (!supabaseBase) throw new Error("Supabase URL is not configured.");
 
+    const base = supabaseBase.endsWith("/")
+      ? supabaseBase.slice(0, -1)
+      : supabaseBase;
+
     const functionUrl =
-      supabaseBase.endsWith("/") ? supabaseBase.slice(0, -1) : supabaseBase +
+      base +
       "/functions/v1/transport-membership-status?customerRef=" +
       encodeURIComponent(customerRef);
 
@@ -49,49 +54,34 @@ export async function GET(request: NextRequest) {
           headers: { Accept: "application/json" },
           cache: "no-store",
         });
+
         const raw = await response.text();
+
         if (!response.ok) {
           lastError = "Membership service failed: " + response.status;
-          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+          }
           continue;
         }
+
         responseData = raw ? JSON.parse(raw) : { membership: null };
         break;
       } catch (error: any) {
         lastError = error?.message || lastError;
-        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+        }
       }
     }
 
     if (responseData === null) throw new Error(lastError);
 
     const membership = responseData?.membership ?? null;
-    const owner = membership?.plan_code === "owner" && membership?.status === "active";
-    const active = Boolean(
-      owner ||
-      (
-        membership?.status === "active" &&
-        membership?.expires_at &&
-        new Date(String(membership.expires_at)).getTime() > Date.now()
-      )
-    );
+    const owner =
+      membership?.plan_code === "owner" &&
+      membership?.status === "active";
 
-    return NextResponse.json({
-      active,
-      owner,
-      authorized: owner,
-      membership,
-    }, { headers: { "Cache-Control": "no-store" } });
-  } catch (error: any) {
-        lastError = error?.message || lastError;
-        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
-      }
-    }
-
-    if (responseData === null) throw new Error(lastError);
-
-    const membership = responseData?.membership ?? null;
-    const owner = membership?.plan_code === "owner" && membership?.status === "active";
     const active = Boolean(
       owner ||
       (
