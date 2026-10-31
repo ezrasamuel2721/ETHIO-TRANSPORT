@@ -357,7 +357,28 @@ export default function Home(){
 
  {/* Membership status is checked in the background for payment/account flows.
      It must never block the public transport information and service hub. */}
- return <main className="app">
+ if(membershipChecked && !membershipActive){
+  const retry=()=>{window.location.reload()};
+  if(membershipCheckFailed){
+    return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
+      <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}>
+        <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT • SERVICE STATUS</div>
+        <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"የአገልግሎት ማረጋገጫ አልተሳካም":"Service verification failed"}</h1>
+        <p>{lang==="am"?"የአባልነት ሁኔታ ከሰርቨር ማረጋገጥ አልተቻለም። እባክዎ እስኪስተካከል ድረስ ክፍያ አይፈጽሙ።":"Membership status could not be verified. Please do not make a payment until the service is available."}</p>
+        <button onClick={retry} style={{marginTop:16,padding:"14px 24px",border:0,borderRadius:14,cursor:"pointer"}}>↻ {lang==="am"?"እንደገና ሞክር":"Retry"}</button>
+      </div>
+    </section></main>;
+  }
+  return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
+    <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}>
+      <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT</div>
+      <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"አገልግሎቱን ለመጠቀም አባልነት ያስፈልጋል":"Membership required"}</h1>
+      <p>{lang==="am"?"የተፈቀደላቸው ባለቤት እና አካላት ያለክፍያ ይጠቀማሉ። ለሌሎች ተጠቃሚዎች አባልነት ከክፍያ በኋላ ይከፈታል።":"The owner and authorized entities have free access. Other users must activate membership through payment before access is granted."}</p>
+      <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"inline-block",marginTop:16,padding:"14px 24px",borderRadius:14,textDecoration:"none"}}>{lang==="am"?"አባልነት ክፈል / ክፈት":"Pay & Activate Membership"}</a>
+    </div>
+  </section></main>;
+}
+return <main className="app">
   <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}>{LANG_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></header>
 
   <section className="hero" aria-label="ETHIO TRANSPORT">
