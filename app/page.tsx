@@ -438,19 +438,16 @@ export default function Home(){
     <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}>
       <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT</div>
       <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"አገልግሎቱን ለመጠቀም አባልነት ያስፈልጋል":"Membership required"}</h1>
-      <p>{lang==="am"?"የተፈቀደላቸው ባለቤት እና አካላት ያለክፍያ ይጠቀማሉ። ለሌሎች ተጠቃሚዎች አባልነት ከክፍያ በኋላ ይከፈታል።":"The owner and authorized entities have free access. Other users must activate membership through payment before access is granted."}</p>
+      <p style={{fontSize:16,fontWeight:700,lineHeight:1.8}}>{lang==="am"?"እባክዎ ቀድመው አባል ይሁኑ!":"Please become a member first."}</p>
+      <div style={{marginTop:10,padding:"16px",borderRadius:14,background:"#f3f7f5",border:"1px solid #dfe9e3",textAlign:"center"}}>
+        <div style={{fontSize:18,fontWeight:900,color:"#176b4a"}}>{lang==="am"?"250 ብር ብቻ":"Only 250 ETB"}</div>
+        <div style={{marginTop:4,fontWeight:700}}>{lang==="am"?"ለ1 ዓመት በነፃ ይጠቀሙ!":"Use the service for 1 year after payment."}</div>
+      </div>
       <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:"#f3f7f5",fontSize:13,textAlign:"left"}}>
         <strong>{lang==="am"?"የመለያ መለያ (Customer Reference)":"Customer Reference"}</strong>
         <div style={{marginTop:6,wordBreak:"break-all",fontFamily:"monospace"}}>{customerRef}</div>
       </div>
-      <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"inline-block",marginTop:16,padding:"14px 24px",borderRadius:14,textDecoration:"none"}}>{lang==="am"?"አባልነት ክፈል / ክፈት":"Pay & Activate Membership"}</a>
-      <div style={{marginTop:24,paddingTop:18,borderTop:"1px solid #e5ebe7",textAlign:"left"}}>
-        <strong>{lang==="am"?"ለባለቤቱ የነፃ መግቢያ ማረጋገጫ":"Owner free-access activation"}</strong>
-        <p style={{fontSize:13,opacity:.8,margin:"8px 0"}}>{lang==="am"?"የባለቤቱ አንድ ጊዜ ብቻ የሚጠቀምበትን የማረጋገጫ ኮድ ያስገቡ።":"Enter the one-time owner activation code. It can be used only once."}</p>
-        <input value={ownerActivationCode} onChange={e=>setOwnerActivationCode(e.target.value)} maxLength={128} autoComplete="off" spellCheck={false} placeholder={lang==="am"?"የባለቤት ማረጋገጫ ኮድ":"Owner activation code"} style={{width:"100%",padding:"13px 14px",border:"1px solid #cbd5d0",borderRadius:10,boxSizing:"border-box",fontFamily:"monospace"}} />
-        <button type="button" disabled={ownerActivationLoading} onClick={activateOwnerAccess} style={{marginTop:10,width:"100%",padding:"13px 16px",border:0,borderRadius:10,background:"#176b4a",color:"#fff",fontWeight:700,cursor:"pointer"}}>{ownerActivationLoading?(lang==="am"?"በማረጋገጥ ላይ…":"Verifying…"):(lang==="am"?"የባለቤት መግቢያን አንቃ":"Activate owner access")}</button>
-        {ownerActivationMessage&&<p role="alert" style={{fontSize:13,color:"#a12a2a",marginTop:8}}>{ownerActivationMessage}</p>}
-      </div>
+      <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"block",marginTop:16,padding:"15px 20px",borderRadius:14,textDecoration:"none",textAlign:"center",fontWeight:900,background:"#176b4a",color:"#fff"}}>{lang==="am"?"250 ብር ክፈል → አባልነት ክፈት":"Pay 250 ETB → Activate Membership"}</a>
     </div>
   </section></main>;
 }
