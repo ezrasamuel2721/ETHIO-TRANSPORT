@@ -46,7 +46,9 @@ export async function GET(request: NextRequest) {
             method: "POST",
             headers: {
               apikey: publicKey,
-              Authorization: "Bearer " + publicKey,
+              ...(publicKey.startsWith("sb_publishable_")
+                ? {}
+                : { Authorization: "Bearer " + publicKey }),
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ p_customer_ref: customerRef }),
