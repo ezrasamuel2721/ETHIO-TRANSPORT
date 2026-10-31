@@ -449,7 +449,7 @@ export default function Home(){
         <span>ETHIO TRANSPORT</span>
         <h1>እንኳን በደኅና መጡ</h1>
       </div>
-      <small className="welcome-photo-credit">Photo: Roeli Andréa / Unsplash</small>
+      <small className="welcome-photo-credit">Photo: Shagada / Wikimedia Commons • Public Domain</small>
     </div>
   </main>;
  }
