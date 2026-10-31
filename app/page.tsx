@@ -256,18 +256,30 @@ export default function Home(){
      localStorage.setItem(key,customerRef);
    }
    setCustomerRef(customerRef);
-   fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef),{cache:"no-store"})
-     .then(async r=>{
-       if(!r.ok){setMembershipCheckFailed(true);return null;}
-       return r.json();
-     })
-     .then(d=>{
-       if(!d || typeof d.active!=="boolean"){setMembershipCheckFailed(true);return;}
-       setMembershipCheckFailed(false);
-       setMembershipActive(d.active);
-     })
-     .catch(()=>setMembershipCheckFailed(true))
-     .finally(()=>setMembershipChecked(true));
+   let cancelled=false;
+   const checkMembership=async()=>{
+     for(let attempt=1;attempt<=3;attempt++){
+       try{
+         const response=await fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef)+"&check="+Date.now(),{cache:"no-store"});
+         if(!response.ok) throw new Error("Membership check failed: "+response.status);
+         const data=await response.json();
+         if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
+         if(cancelled)return;
+         setMembershipCheckFailed(false);
+         setMembershipActive(data.active);
+         setMembershipChecked(true);
+         return;
+       }catch(error){
+         if(attempt<3) await new Promise(resolve=>setTimeout(resolve,500*attempt));
+       }
+     }
+     if(!cancelled){
+       setMembershipCheckFailed(true);
+       setMembershipChecked(true);
+     }
+   };
+   checkMembership();
+   return()=>{cancelled=true};
  },[]);
  useEffect(()=>{const id=window.setInterval(()=>setHeroIndex(i=>(i+1)%heroSlides.length),6500);return()=>window.clearInterval(id)},[]);
  useEffect(()=>{const id=window.setInterval(()=>setCardVisualIndex(i=>(i+1)%3),5200);return()=>window.clearInterval(id)},[]);
