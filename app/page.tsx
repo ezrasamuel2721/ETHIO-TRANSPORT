@@ -355,39 +355,8 @@ export default function Home(){
  function saveAccess(){save("ethio_transport_accessibility",{need:accessNeed,savedAt:new Date().toISOString()});setStatus(L.saved)}
  function saveParcel(){if(!parcel.from||!parcel.to||!parcel.description){setStatus("Complete the form first.");return}save("ethio_transport_parcel",parcel);setStatus(L.saved)}
 
- if(!membershipChecked){
-   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
-     <section className="modal" style={{maxWidth:520,width:"100%",position:"static",transform:"none"}}>
-       <div className="modal-content"><h2>ETHIO TRANSPORT</h2><p>የአገልግሎት ሁኔታ እየተረጋገጠ ነው…</p></div>
-     </section>
-   </main>;
- }
- if(membershipCheckFailed){
-   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
-     <section className="modal" style={{maxWidth:620,width:"100%",position:"static",transform:"none"}}>
-       <div className="modal-content" style={{padding:32,textAlign:"center"}}>
-         <div className="eyebrow dark">ETHIO TRANSPORT • SERVICE STATUS</div>
-         <h1>የአገልግሎት ማረጋገጫ አልተሳካም</h1>
-         <p>የአባልነት ሁኔታ ከሰርቨር ማረጋገጥ አልተቻለም። ይህ ችግር እስኪፈታ ድረስ ክፍያ አትፈጽሙ። ከዚያ በኋላ እንደገና ሞክሩ።</p>
-         <p style={{opacity:.7,fontSize:13}}>Membership status could not be verified. Please do not make a payment until the service is available; try again after the issue is resolved.</p>
-         <button className="primary" onClick={()=>window.location.reload()} style={{marginTop:12,padding:"14px 22px",borderRadius:12,fontWeight:800}}>↻ እንደገና ሞክር / Retry</button>
-       </div>
-     </section>
-   </main>;
- }
- if(!membershipActive){
-   return <main className="app" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}>
-     <section className="modal" style={{maxWidth:620,width:"100%",position:"static",transform:"none"}}>
-       <div className="modal-content" style={{padding:32,textAlign:"center"}}>
-         <div className="eyebrow dark">ETHIO TRANSPORT • SECURE SERVICE</div>
-         <h1>የአገልግሎት ምዝገባ</h1>
-         <p>ETHIO TRANSPORT ሙሉ አገልግሎቱን ለ1 ዓመት በ250 ETB ይከፍታል። ክፍያዎ ከተረጋገጠ በኋላ የአፑ አገልግሎቶች ይከፈታሉ።</p>
-         <a className="primary" href="/payment" style={{display:"inline-block",textDecoration:"none",padding:"14px 22px",borderRadius:12,fontWeight:800}}>🔐 250 ETB / 1 ዓመት ክፍያ</a>
-         <p style={{fontSize:12,opacity:.65,marginTop:18}}>ክፍያ እስኪረጋገጥ ድረስ ምንም የሐሰት ማረጋገጫ አይሰጥም።</p>\n         <p style={{fontSize:11,opacity:.45,marginTop:10,wordBreak:"break-all"}}>የመሳሪያ መለያ: {customerRef}</p>
-       </div>
-     </section>
-   </main>;
- }
+ {/* Membership status is checked in the background for payment/account flows.
+     It must never block the public transport information and service hub. */}
  return <main className="app">
   <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}>{LANG_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></header>
 
