@@ -257,20 +257,46 @@ export default function Home(){
    }
    setCustomerRef(customerRef);
    let cancelled=false;
+   const requestMembership=async()=>{
+     const url="/api/membership/status?customerRef="+encodeURIComponent(customerRef)+"&check="+Date.now();
+     try{
+       const response=await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"}});
+       const raw=await response.text();
+       if(!response.ok) throw new Error("Membership check failed: "+response.status);
+       const data=JSON.parse(raw);
+       if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
+       return data;
+     }catch(fetchError){
+       return await new Promise<any>((resolve,reject)=>{
+         const xhr=new XMLHttpRequest();
+         xhr.open("GET",url,true);
+         xhr.setRequestHeader("Accept","application/json");
+         xhr.timeout=10000;
+         xhr.onload=()=>{
+           try{
+             if(xhr.status<200||xhr.status>=300) throw new Error("Membership check failed: "+xhr.status);
+             const data=JSON.parse(xhr.responseText);
+             if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
+             resolve(data);
+           }catch(error){reject(error)}
+         };
+         xhr.onerror=()=>reject(new Error("Membership network error"));
+         xhr.ontimeout=()=>reject(new Error("Membership request timeout"));
+         xhr.send();
+       });
+     }
+   };
    const checkMembership=async()=>{
-     for(let attempt=1;attempt<=3;attempt++){
+     for(let attempt=1;attempt<=6;attempt++){
        try{
-         const response=await fetch("/api/membership/status?customerRef="+encodeURIComponent(customerRef)+"&check="+Date.now(),{cache:"no-store"});
-         if(!response.ok) throw new Error("Membership check failed: "+response.status);
-         const data=await response.json();
-         if(!data || typeof data.active!=="boolean") throw new Error("Invalid membership response");
+         const data=await requestMembership();
          if(cancelled)return;
          setMembershipCheckFailed(false);
          setMembershipActive(data.active);
          setMembershipChecked(true);
          return;
        }catch(error){
-         if(attempt<3) await new Promise(resolve=>setTimeout(resolve,500*attempt));
+         if(attempt<6) await new Promise(resolve=>setTimeout(resolve,Math.min(1000*attempt,5000)));
        }
      }
      if(!cancelled){
