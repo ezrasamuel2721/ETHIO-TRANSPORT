@@ -31,42 +31,58 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
-    const base = process.env.SUPABASE_URL;
-    if (!base || !publicKey) throw new Error("Supabase public API is not configured.");
+    const supabaseBase = process.env.SUPABASE_URL;
+    if (!supabaseBase) throw new Error("Supabase URL is not configured.");
+
+    const functionUrl =
+      supabaseBase.replace(/\\/$/, "") +
+      "/functions/v1/transport-membership-status?customerRef=" +
+      encodeURIComponent(customerRef);
 
     let responseData: any = null;
-    let lastError = "Membership RPC failed.";
+    let lastError = "Membership service failed.";
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const rpcResponse = await fetch(
-          base.replace(/\/$/, "") + "/rest/v1/rpc/check_transport_membership",
-          {
-            method: "POST",
-            headers: {
-              apikey: publicKey,
-              ...(publicKey.startsWith("sb_publishable_")
-                ? {}
-                : { Authorization: "Bearer " + publicKey }),
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-            },
-            body: JSON.stringify({ p_customer_ref: customerRef }),
-            cache: "no-store",
-          }
-        );
-
-        const raw = await rpcResponse.text();
-        if (!rpcResponse.ok) {
-          lastError = "Membership RPC failed: " + rpcResponse.status;
+        const response = await fetch(functionUrl, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
+        const raw = await response.text();
+        if (!response.ok) {
+          lastError = "Membership service failed: " + response.status;
           if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
           continue;
         }
-
         responseData = raw ? JSON.parse(raw) : { membership: null };
         break;
       } catch (error: any) {
+        lastError = error?.message || lastError;
+        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+      }
+    }
+
+    if (responseData === null) throw new Error(lastError);
+
+    const membership = responseData?.membership ?? null;
+    const owner = membership?.plan_code === "owner" && membership?.status === "active";
+    const active = Boolean(
+      owner ||
+      (
+        membership?.status === "active" &&
+        membership?.expires_at &&
+        new Date(String(membership.expires_at)).getTime() > Date.now()
+      )
+    );
+
+    return NextResponse.json({
+      active,
+      owner,
+      authorized: owner,
+      membership,
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error: any) {
         lastError = error?.message || lastError;
         if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
       }
