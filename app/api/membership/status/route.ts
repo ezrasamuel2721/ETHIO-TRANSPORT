@@ -33,13 +33,24 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const membership = await supabasePublicRest<Record<string,unknown> | null>(
-      "rpc/check_transport_membership",
+    const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+    const base = process.env.SUPABASE_URL;
+    if (!base || !publicKey) throw new Error("Supabase public API is not configured.");
+    const rpcResponse = await fetch(
+      base.replace(/\/$/, "") + "/rest/v1/rpc/check_transport_membership",
       {
         method: "POST",
+        headers: {
+          apikey: publicKey,
+          Authorization: "Bearer " + publicKey,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ p_customer_ref: customerRef }),
+        cache: "no-store",
       }
     );
+    if (!rpcResponse.ok) throw new Error("Membership RPC failed: " + rpcResponse.status);
+    const membership = await rpcResponse.json();
     const active = Boolean(
       membership?.status === "active" &&
       membership?.expires_at &&
