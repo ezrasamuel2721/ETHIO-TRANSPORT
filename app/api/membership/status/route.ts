@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabasePublicRest } from "../../../../lib/payments/supabase";
 
 function isPrivilegedCustomerRef(customerRef: string) {
   const configured = [
@@ -13,7 +12,7 @@ function isPrivilegedCustomerRef(customerRef: string) {
 export async function GET(request: NextRequest) {
   const customerRef = request.nextUrl.searchParams.get("customerRef") || "";
   if (!/^[A-Za-z0-9_-]{16,80}$/.test(customerRef)) {
-    return NextResponse.json({ error:"Invalid customer reference." }, { status:400 });
+    return NextResponse.json({ error: "Invalid customer reference." }, { status: 400 });
   }
 
   if (isPrivilegedCustomerRef(customerRef)) {
@@ -36,8 +35,10 @@ export async function GET(request: NextRequest) {
     const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
     const base = process.env.SUPABASE_URL;
     if (!base || !publicKey) throw new Error("Supabase public API is not configured.");
-    let membership: any = null;
+
+    let responseData: any = null;
     let lastError = "Membership RPC failed.";
+
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const rpcResponse = await fetch(
@@ -50,35 +51,46 @@ export async function GET(request: NextRequest) {
                 ? {}
                 : { Authorization: "Bearer " + publicKey }),
               "Content-Type": "application/json",
+              "Accept": "application/json",
             },
             body: JSON.stringify({ p_customer_ref: customerRef }),
             cache: "no-store",
           }
         );
+
+        const raw = await rpcResponse.text();
         if (!rpcResponse.ok) {
           lastError = "Membership RPC failed: " + rpcResponse.status;
           if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
           continue;
         }
-        membership = await rpcResponse.json();
+
+        responseData = raw ? JSON.parse(raw) : { membership: null };
         break;
       } catch (error: any) {
         lastError = error?.message || lastError;
         if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
       }
     }
-    if (membership === null) throw new Error(lastError);
+
+    if (responseData === null) throw new Error(lastError);
+
+    const membership = responseData?.membership ?? null;
     const active = Boolean(
       membership?.status === "active" &&
       membership?.expires_at &&
       new Date(String(membership.expires_at)).getTime() > Date.now()
     );
-    return NextResponse.json({ active, owner: false,
-    authorized: false,
-    membership }, {
-      headers: { "Cache-Control": "no-store" },
-    });
-  } catch (error:any) {
-    return NextResponse.json({ error:error?.message || "Membership status unavailable." }, { status:503 });
+
+    return NextResponse.json({
+      active,
+      owner: false,
+      authorized: false,
+      membership,
+    }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error: any) {
+    return NextResponse.json({
+      error: error?.message || "Membership status unavailable.",
+    }, { status: 503 });
   }
 }
