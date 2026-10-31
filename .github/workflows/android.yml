@@ -65,3 +65,5 @@ jobs:
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/apk/debug/app-debug.apk
+
+# Keep Android releases synchronized with the latest production access logic.
