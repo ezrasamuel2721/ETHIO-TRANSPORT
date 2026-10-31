@@ -36,21 +36,36 @@ export async function GET(request: NextRequest) {
     const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
     const base = process.env.SUPABASE_URL;
     if (!base || !publicKey) throw new Error("Supabase public API is not configured.");
-    const rpcResponse = await fetch(
-      base.replace(/\/$/, "") + "/rest/v1/rpc/check_transport_membership",
-      {
-        method: "POST",
-        headers: {
-          apikey: publicKey,
-          Authorization: "Bearer " + publicKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ p_customer_ref: customerRef }),
-        cache: "no-store",
+    let membership: any = null;
+    let lastError = "Membership RPC failed.";
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const rpcResponse = await fetch(
+          base.replace(/\/$/, "") + "/rest/v1/rpc/check_transport_membership",
+          {
+            method: "POST",
+            headers: {
+              apikey: publicKey,
+              Authorization: "Bearer " + publicKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ p_customer_ref: customerRef }),
+            cache: "no-store",
+          }
+        );
+        if (!rpcResponse.ok) {
+          lastError = "Membership RPC failed: " + rpcResponse.status;
+          if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+          continue;
+        }
+        membership = await rpcResponse.json();
+        break;
+      } catch (error: any) {
+        lastError = error?.message || lastError;
+        if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 250 * attempt));
       }
-    );
-    if (!rpcResponse.ok) throw new Error("Membership RPC failed: " + rpcResponse.status);
-    const membership = await rpcResponse.json();
+    }
+    if (membership === null) throw new Error(lastError);
     const active = Boolean(
       membership?.status === "active" &&
       membership?.expires_at &&
