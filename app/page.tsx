@@ -250,11 +250,12 @@ export default function Home(){
  },[]);
  useEffect(()=>{
    const key="ethio_transport_customer_ref";
-   let customerRef=localStorage.getItem(key);
+   const urlCustomerRef=new URLSearchParams(window.location.search).get("customer_ref");
+   let customerRef=/^[A-Za-z0-9_-]{16,80}$/.test(urlCustomerRef||"") ? urlCustomerRef! : localStorage.getItem(key);
    if(!customerRef || !/^[A-Za-z0-9_-]{16,80}$/.test(customerRef)){
      customerRef="ETU_"+crypto.randomUUID().replace(/-/g,"");
-     localStorage.setItem(key,customerRef);
    }
+   localStorage.setItem(key,customerRef);
    setCustomerRef(customerRef);
    let cancelled=false;
    const requestMembership=async()=>{
