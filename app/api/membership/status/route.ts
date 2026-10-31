@@ -1,4 +1,7 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+
+const COOKIE_NAME = "ethio_transport_authorized";
 
 function isAuthorizedCustomerRef(customerRef: string) {
   const refs = (process.env.ETHIO_TRANSPORT_AUTHORIZED_CUSTOMER_REFS || "")
@@ -8,6 +11,14 @@ function isAuthorizedCustomerRef(customerRef: string) {
   return refs.includes(customerRef);
 }
 
+function hasAuthorizedCookie(request: NextRequest, customerRef: string) {
+  const expectedHash = process.env.ETHIO_TRANSPORT_AUTHORIZED_ACCESS_CODE_HASH || "";
+  const token = request.cookies.get(COOKIE_NAME)?.value || "";
+  if (!/^[a-f0-9]{64}$/.test(expectedHash) || !/^[a-f0-9]{64}$/.test(token)) return false;
+  const expected = createHmac("sha256", expectedHash).update(customerRef, "utf8").digest("hex");
+  return timingSafeEqual(Buffer.from(token, "hex"), Buffer.from(expected, "hex"));
+}
+
 export async function GET(request: NextRequest) {
   const customerRef = request.nextUrl.searchParams.get("customerRef") || "";
 
@@ -15,7 +26,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid customer reference." }, { status: 400 });
   }
 
-  if (isAuthorizedCustomerRef(customerRef)) {
+  if (isAuthorizedCustomerRef(customerRef) || hasAuthorizedCookie(request, customerRef)) {
     return NextResponse.json({
       active: true,
       owner: false,
