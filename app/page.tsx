@@ -377,6 +377,10 @@ export default function Home(){
       <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT</div>
       <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"አገልግሎቱን ለመጠቀም አባልነት ያስፈልጋል":"Membership required"}</h1>
       <p>{lang==="am"?"የተፈቀደላቸው ባለቤት እና አካላት ያለክፍያ ይጠቀማሉ። ለሌሎች ተጠቃሚዎች አባልነት ከክፍያ በኋላ ይከፈታል።":"The owner and authorized entities have free access. Other users must activate membership through payment before access is granted."}</p>
+      <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:"#f3f7f5",fontSize:13,textAlign:"left"}}>
+        <strong>{lang==="am"?"የመለያ መለያ (Customer Reference)":"Customer Reference"}</strong>
+        <div style={{marginTop:6,wordBreak:"break-all",fontFamily:"monospace"}}>{customerRef}</div>
+      </div>
       <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"inline-block",marginTop:16,padding:"14px 24px",borderRadius:14,textDecoration:"none"}}>{lang==="am"?"አባልነት ክፈል / ክፈት":"Pay & Activate Membership"}</a>
     </div>
   </section></main>;
