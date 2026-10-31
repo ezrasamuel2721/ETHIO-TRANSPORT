@@ -15,7 +15,7 @@ import androidx.webkit.WebViewFeature;
 public class MainActivity extends AppCompatActivity {
     private WebView web;
     private WebView startupOverlay;
-    private static final String START_URL = "https://ethio-transport.vercel.app/";
+    private static final String START_URL = "https://ethio-transport.vercel.app/?app_version=1.0.5";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -25,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout root = new FrameLayout(this);
 
         web = new WebView(this);
+        web.clearCache(true);
+        web.clearHistory();
         root.addView(web, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
@@ -48,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setDatabaseEnabled(true);
         settings.setLoadsImagesAutomatically(true);
         settings.setAllowFileAccess(false);
