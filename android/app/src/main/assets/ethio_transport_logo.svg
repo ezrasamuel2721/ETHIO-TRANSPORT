@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" fill="#fff"/>
+<g transform="translate(512 395)">
+  <circle r="245" fill="#fff" stroke="#0b1f46" stroke-width="30"/>
+  <circle r="205" fill="#1595dc"/>
+  <path d="M-175 100 Q-90 40 0 30 Q100 20 185 95 L130 135 Q35 75 -60 100 Q-120 115 -160 145Z" fill="#0b1f46"/>
+  <path d="M-165 128 Q-45 65 70 85 Q140 95 190 65" fill="none" stroke="#fff" stroke-width="16"/>
+  <path d="M-45 -105 L-5 -80 L42 -128 L18 -73 L-62 -60 L-120 -78 L-58 -91 Z" fill="#fff"/>
+  <path d="M-148 80 L-122 35 Q-105 8 -72 10 L-25 16 L-8 48 L-25 96 L-118 96 Z" fill="#f7cf00" stroke="#0b1f46" stroke-width="7"/>
+  <circle cx="-100" cy="92" r="15" fill="#0b1f46"/><circle cx="-35" cy="92" r="15" fill="#0b1f46"/>
+  <path d="M-30 105 L-30 -5 Q-30 -34 0 -34 L72 -34 Q103 -34 103 -5 L103 105 Z" fill="#fff" stroke="#0b1f46" stroke-width="9"/>
+  <path d="M-12 -10 L85 -10 L88 42 L-12 42Z" fill="#0b5d8f"/>
+  <circle cx="-5" cy="103" r="15" fill="#0b1f46"/><circle cx="77" cy="103" r="15" fill="#0b1f46"/>
+  <path d="M85 90 L85 12 Q85 -16 116 -25 L175 -14 Q205 -8 216 18 L224 83 Q220 104 196 104 L95 104 Z" fill="#fff" stroke="#0b1f46" stroke-width="9"/>
+  <path d="M104 3 L184 4 Q201 7 207 25 L211 48 L104 48Z" fill="#0b5d8f"/>
+  <path d="M118 62 L207 62" stroke="#d92020" stroke-width="12"/>
+  <circle cx="126" cy="103" r="15" fill="#0b1f46"/><circle cx="194" cy="103" r="15" fill="#0b1f46"/>
+  <path d="M-15 120 Q75 170 215 140 L168 185 Q70 210 -20 160 Z" fill="#0b9f50"/>
+  <path d="M-10 160 Q95 205 190 185 L148 220 Q70 230 -35 185 Z" fill="#f4c400"/>
+  <path d="M-35 185 Q65 235 148 220 L112 247 Q35 242 -55 205 Z" fill="#e51d25"/>
+</g>
+<text x="512" y="690" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="800" letter-spacing="3" fill="#0b2a5b">ETHIO <tspan font-weight="400">TRANSPORT</tspan></text>
+<text x="512" y="750" text-anchor="middle" font-family="Noto Sans Ethiopic, Arial, sans-serif" font-size="30" font-weight="700" fill="#e33b32">ኢትዮ ትራንስፖርት የህዝብ መጓጓዣ መረጃና አገልግሎት!</text>
+<path d="M150 785 H874" stroke="#0b9f50" stroke-width="8"/><path d="M390 785 H650" stroke="#f4c400" stroke-width="8"/><path d="M650 785 H874" stroke="#e51d25" stroke-width="8"/>
+<text x="512" y="845" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="26" letter-spacing="7" fill="#0b2a5b">SMART MOBILITY • ETHIOPIA</text>
+</svg>
