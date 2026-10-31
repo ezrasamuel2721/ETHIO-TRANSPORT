@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - "android/**"
+      - "app/page.tsx"
+      - "app/**"
       - "public/icons/icon.svg"
       - ".github/workflows/android.yml"
 
