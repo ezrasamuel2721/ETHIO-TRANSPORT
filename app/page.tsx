@@ -422,7 +422,7 @@ export default function Home(){
 
  {/* Membership status is checked in the background for payment/account flows.
      It must never block the public transport information and service hub. */}
- if(membershipChecked && !membershipActive){
+ if(membershipChecked && !membershipActive && !membershipCheckFailed){
   const retry=()=>{window.location.reload()};
   if(membershipCheckFailed){
     return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
