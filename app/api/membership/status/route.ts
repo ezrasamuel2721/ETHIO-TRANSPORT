@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
       membership?.expires_at &&
       new Date(String(membership.expires_at)).getTime() > Date.now()
     );
-    return NextResponse.json({ active, owner: false, authorized: false, membership }, {
+    return NextResponse.json({ active, owner: false,
+    authorized: false,
+    membership }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error:any) {
