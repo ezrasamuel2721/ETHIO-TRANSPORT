@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     if (!supabaseBase) throw new Error("Supabase URL is not configured.");
 
     const functionUrl =
-      supabaseBase.replace(/\\/$/, "") +
+      supabaseBase.endsWith("/") ? supabaseBase.slice(0, -1) : supabaseBase +
       "/functions/v1/transport-membership-status?customerRef=" +
       encodeURIComponent(customerRef);
 
