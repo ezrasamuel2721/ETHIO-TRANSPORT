@@ -407,7 +407,20 @@ export default function Home(){
  async function submitReport(e:FormEvent){e.preventDefault();if(!report.city.trim()){setStatus(lang==="am"?"ከተማ ይምረጡ።":"Select a city.");return}if(!report.plate.trim()){setStatus(lang==="am"?"የመኪና ታርጋ ቁጥር ያስገቡ።":"Enter the vehicle plate number.");return}const id="ET-"+new Date().toISOString().replace(/\D/g,"").slice(0,14)+"-"+Math.random().toString(36).slice(2,7).toUpperCase();const form=new FormData();Object.entries({...report,reference:id,createdAt:new Date().toISOString(),latitude:coords?.lat??"",longitude:coords?.lon??""}).forEach(([k,v])=>form.append(k,String(v??"")));evidenceFiles.forEach(f=>form.append("evidence",f,f.name));try{const r=await fetch("/api/complaints",{method:"POST",body:form});if(r.ok){const d=await r.json();setRef(d.reference||id);setStatus(d.delivered?(lang==="am"?"✓ ቅሬታዎ ለተጠሪው አካል ደርሷል።":"✓ Your report was delivered to the responsible authority."):d.deliveryStatus==="routed"?(lang==="am"?"✓ ቅሬታዎ ለተጠሪው አካል ተመርጧል፤ ቀጥታ መላኪያ ገና አልተረጋገጠም።":"✓ Your report is routed to the responsible authority; direct delivery is not yet verified."):d.deliveryStatus==="pending_official_submission"?(lang==="am"?"✓ ቅሬታዎ ተቀምጧል፤ የባለሥልጣኑ ኦፊሴላዊ የመላኪያ ቻናል ገና አልተገናኘም።":"✓ Your report is saved; the authority's official submission channel is not yet connected."):L.received);setEvidenceFiles([]);return}queueAction({id:"complaint-"+id,url:"/api/complaints",method:"POST",body:{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}})}catch{queueAction({id:"complaint-"+id,url:"/api/complaints",method:"POST",body:{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}})}save("ethio_transport_reports",[...load<any[]>("ethio_transport_reports",[]),{...report,reference:id,evidenceNames:evidenceFiles.map(f=>f.name)}].slice(-50));setRef(id);setStatus(L.pending)}
  function saveAccess(){save("ethio_transport_accessibility",{need:accessNeed,savedAt:new Date().toISOString()});setStatus(L.saved)}
  function saveParcel(){if(!parcel.from||!parcel.to||!parcel.description){setStatus("Complete the form first.");return}save("ethio_transport_parcel",parcel);setStatus(L.saved)}
- async function activateAuthorizedAccess(){\n   if(!customerRef||!authorizedAccessCode.trim()){setAuthorizedAccessMessage("");return}\n   setAuthorizedAccessLoading(true);setAuthorizedAccessMessage("");\n   try{\n     const response=await fetch("/api/membership/claim-authorized",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({customerRef,accessCode:authorizedAccessCode.trim()}),cache:"no-store"});\n     const data=await response.json();\n     if(!response.ok||!data?.authorized) throw new Error(data?.error||(lang==="am"?"ማረጋገጫው አልተሳካም።":"Access verification failed."));\n     setAuthorizedAccessCode("");\n     window.location.reload();\n   }catch(error:any){setAuthorizedAccessMessage(error?.message||"");}\n   finally{setAuthorizedAccessLoading(false)}\n }\n\n async function activateOwnerAccess(){
+ async function activateAuthorizedAccess(){
+   if(!customerRef||!authorizedAccessCode.trim()){setAuthorizedAccessMessage("");return}
+   setAuthorizedAccessLoading(true);setAuthorizedAccessMessage("");
+   try{
+     const response=await fetch("/api/membership/claim-authorized",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({customerRef,accessCode:authorizedAccessCode.trim()}),cache:"no-store"});
+     const data=await response.json();
+     if(!response.ok||!data?.authorized) throw new Error(data?.error||(lang==="am"?"ማረጋገጫው አልተሳካም።":"Access verification failed."));
+     setAuthorizedAccessCode("");
+     window.location.reload();
+   }catch(error:any){setAuthorizedAccessMessage(error?.message||"");}
+   finally{setAuthorizedAccessLoading(false)}
+ }
+
+ async function activateOwnerAccess(){
    if(!customerRef||!ownerActivationCode.trim()) {setOwnerActivationMessage(lang==="am"?"የማረጋገጫ ኮዱን ያስገቡ።":"Enter the owner activation code.");return}
    setOwnerActivationLoading(true);setOwnerActivationMessage("");
    try{
