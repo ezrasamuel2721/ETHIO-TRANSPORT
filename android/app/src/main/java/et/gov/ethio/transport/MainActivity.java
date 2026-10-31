@@ -22,12 +22,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Clear browser state that can keep an old WebView shell or service-worker data.
-        WebStorage.getInstance().deleteAllData();
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.removeAllCookies(null);
-        cookieManager.flush();
-
         FrameLayout root = new FrameLayout(this);
 
         web = new WebView(this);
