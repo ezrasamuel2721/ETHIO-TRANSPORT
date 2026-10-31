@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "android/**"
+      - "public/icons/icon.svg"
       - ".github/workflows/android.yml"
 
 permissions:
