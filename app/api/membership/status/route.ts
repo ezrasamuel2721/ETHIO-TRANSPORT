@@ -3,12 +3,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 const COOKIE_NAME = "ethio_transport_authorized";
 
-function isAuthorizedCustomerRef(customerRef: string) {
-  const refs = (process.env.ETHIO_TRANSPORT_AUTHORIZED_CUSTOMER_REFS || "")
+function customerRefsFromEnv(key: string) {
+  return (process.env[key] || "")
     .split(",")
     .map(value => value.trim())
     .filter(Boolean);
-  return refs.includes(customerRef);
+}
+
+function isOwnerCustomerRef(customerRef: string) {
+  return customerRefsFromEnv("ETHIO_TRANSPORT_OWNER_CUSTOMER_REFS").includes(customerRef);
+}
+
+function isAuthorizedCustomerRef(customerRef: string) {
+  return customerRefsFromEnv("ETHIO_TRANSPORT_AUTHORIZED_CUSTOMER_REFS").includes(customerRef);
 }
 
 function hasAuthorizedCookie(request: NextRequest, customerRef: string) {
@@ -24,6 +31,22 @@ export async function GET(request: NextRequest) {
 
   if (!/^[A-Za-z0-9_-]{16,80}$/.test(customerRef)) {
     return NextResponse.json({ error: "Invalid customer reference." }, { status: 400 });
+  }
+
+  if (isOwnerCustomerRef(customerRef)) {
+    return NextResponse.json({
+      active: true,
+      owner: true,
+      authorized: true,
+      membership: {
+        plan_code: "owner",
+        status: "active",
+        starts_at: null,
+        expires_at: null,
+        amount: 0,
+        currency: "ETB",
+      },
+    }, { headers: { "Cache-Control": "no-store" } });
   }
 
   if (isAuthorizedCustomerRef(customerRef) || hasAuthorizedCookie(request, customerRef)) {
