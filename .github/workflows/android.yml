@@ -25,6 +25,11 @@ jobs:
     defaults:
       run:
         working-directory: android
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,33 +42,49 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10"
-      - name: Decode release keystore
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Check release signing configuration
+        id: signing
+        shell: bash
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/ethio-transport-release.jks
-            test -s /tmp/ethio-transport-release.jks
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "All Android release signing inputs are present."
+          elif [ -z "$ANDROID_KEYSTORE_BASE64" ] && [ -z "$ANDROID_KEYSTORE_PASSWORD" ] && [ -z "$ANDROID_KEY_ALIAS" ] && [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Release signing is not configured. The workflow will build only the test APK; it will not create an unsigned Play Store AAB."
           else
-            echo "No release keystore configured; building an unsigned release bundle for CI verification."
+            echo "Android release signing secrets are only partially configured. Add all four secrets before building a release."
+            exit 1
           fi
-      - name: Build release bundle
+      - name: Decode release keystore
+        if: steps.signing.outputs.configured == 'true'
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/ethio-transport-release.jks
+          test -s /tmp/ethio-transport-release.jks
+      - name: Build signed release bundle
+        if: steps.signing.outputs.configured == 'true'
         env:
           ANDROID_KEYSTORE_PATH: /tmp/ethio-transport-release.jks
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle --no-daemon :app:bundleRelease
-      - name: Build debug APK
-        run: gradle --no-daemon :app:assembleDebug
-      - name: Verify release bundle
-        run: test -s app/build/outputs/bundle/release/app-release.aab
-      - name: Upload Android artifacts
+      - name: Verify signed release bundle
+        if: steps.signing.outputs.configured == 'true'
+        run: |
+          test -s app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify -certs app/build/outputs/bundle/release/app-release.aab
+      - name: Upload signed release bundle
+        if: steps.signing.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ethio-transport-android
-          path: |
-            android/app/build/outputs/bundle/release/app-release.aab
-            android/app/build/outputs/apk/debug/app-debug.apk
+          name: ethio-transport-1.0.9-release
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - name: Build debug APK
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ethio-transport-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
 
 # Keep Android releases synchronized with the latest production access logic.
