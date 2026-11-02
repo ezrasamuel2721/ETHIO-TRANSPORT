@@ -434,48 +434,7 @@ export default function Home(){
    }finally{setOwnerActivationLoading(false)}
  }
 
- {/* Membership status is checked in the background for payment/account flows.
-     It must never block the public transport information and service hub. */}
- if(membershipChecked && !membershipActive && !membershipCheckFailed){
-  const retry=()=>{window.location.reload()};
-  if(membershipCheckFailed){
-    return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
-      <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}>
-        <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT • SERVICE STATUS</div>
-        <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"የአገልግሎት ማረጋገጫ አልተሳካም":"Service verification failed"}</h1>
-        <p>{lang==="am"?"የአባልነት ሁኔታ ከሰርቨር ማረጋገጥ አልተቻለም። እባክዎ እስኪስተካከል ድረስ ክፍያ አይፈጽሙ።":"Membership status could not be verified. Please do not make a payment until the service is available."}</p>
-        <button onClick={retry} style={{marginTop:16,padding:"14px 24px",border:0,borderRadius:14,cursor:"pointer"}}>↻ {lang==="am"?"እንደገና ሞክር":"Retry"}</button>
-      </div>
-    </section></main>;
-  }
-  return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:"24px"}}>
-    <div className="service-status-card" style={{maxWidth:560,width:"100%",textAlign:"center",padding:"32px",borderRadius:24,background:"#fff",boxShadow:"0 18px 60px rgba(0,0,0,.14)",position:"relative"}}>
-      <button type="button" aria-label="Access" title="" onClick={()=>{setAuthorizedAccessOpen(true);setAuthorizedAccessMessage("")}} style={{position:"absolute",right:14,top:14,width:34,height:34,border:0,borderRadius:"50%",background:"transparent",fontSize:20,cursor:"pointer"}}>🔑</button>
-      <div style={{fontWeight:800,letterSpacing:2,color:"#176b4a"}}>ETHIO TRANSPORT</div>
-      <h1 style={{fontSize:"clamp(28px,6vw,42px)"}}>{lang==="am"?"አገልግሎቱን ለመጠቀም አባልነት ያስፈልጋል":"Membership required"}</h1>
-      <p style={{fontSize:16,fontWeight:700,lineHeight:1.8}}>{lang==="am"?"እባክዎ ቀድመው አባል ይሁኑ!":"Please become a member first."}</p>
-      <div style={{marginTop:10,padding:"16px",borderRadius:14,background:"#f3f7f5",border:"1px solid #dfe9e3",textAlign:"center"}}>
-        <div style={{fontSize:18,fontWeight:900,color:"#176b4a"}}>{lang==="am"?"250 ብር ብቻ":"Only 250 ETB"}</div>
-        <div style={{marginTop:4,fontWeight:700}}>{lang==="am"?"ለ1 ዓመት በነፃ ይጠቀሙ!":"Use the service for 1 year after payment."}</div>
-      </div>
-      <div style={{marginTop:14,padding:"12px 14px",borderRadius:12,background:"#f3f7f5",fontSize:13,textAlign:"left"}}>
-        <strong>{lang==="am"?"የመለያ መለያ (Customer Reference)":"Customer Reference"}</strong>
-        <div style={{marginTop:6,wordBreak:"break-all",fontFamily:"monospace"}}>{customerRef}</div>
-      </div>
-      <a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"block",marginTop:16,padding:"15px 20px",borderRadius:14,textDecoration:"none",textAlign:"center",fontWeight:900,background:"#176b4a",color:"#fff"}}>{lang==="am"?"250 ብር ክፈል → አባልነት ክፈት":"Pay 250 ETB → Activate Membership"}</a>
-      {authorizedAccessOpen&&<div onMouseDown={e=>{if(e.target===e.currentTarget)setAuthorizedAccessOpen(false)}} style={{position:"fixed",inset:0,zIndex:9999,display:"grid",placeItems:"center",padding:20,background:"rgba(0,0,0,.55)"}}>
-        <div style={{width:"min(360px,100%)",background:"#fff",borderRadius:20,padding:22,boxShadow:"0 24px 80px rgba(0,0,0,.25)"}}>
-          <form onSubmit={e=>{e.preventDefault();activateAuthorizedAccess()}}>
-            <input autoFocus type="password" value={authorizedAccessCode} onChange={e=>setAuthorizedAccessCode(e.target.value)} aria-label="Code" style={{width:"100%",boxSizing:"border-box",padding:"14px 15px",border:"1px solid #dfe9e3",borderRadius:12,outline:"none",fontSize:18,letterSpacing:2}} />
-            <button type="submit" disabled={authorizedAccessLoading||!authorizedAccessCode.trim()} style={{width:"100%",marginTop:12,padding:"13px 16px",border:0,borderRadius:12,background:"#176b4a",color:"#fff",fontWeight:900,cursor:"pointer"}}>{authorizedAccessLoading?"…":(lang==="am"?"ግባ":"Enter")}</button>
-            {authorizedAccessMessage&&<div style={{marginTop:10,fontSize:13,color:"#a11",fontWeight:700}}>{authorizedAccessMessage}</div>}
-          </form>
-        </div>
-      </div>}
-    </div>
-  </section></main>;
-}
-return <main className="app">
+ return <main className="app">
   <header className="top"><div><div className="brand">ETHIO TRANSPORT</div><div className="sub">{L.sub}</div></div><select aria-label="Language" value={lang} onChange={e=>setLang(e.target.value as Lang)}>{LANG_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select></header>
 
   <section className="hero" aria-label="ETHIO TRANSPORT">
