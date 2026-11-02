@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView web;
     private WebView startupOverlay;
     private static final String START_URL =
-            "https://ethio-transport.vercel.app/?app_version=1.0.8&native_recovery=1";
+            "https://ethio-transport.vercel.app/?app_version=1.0.9&native_recovery=1";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
