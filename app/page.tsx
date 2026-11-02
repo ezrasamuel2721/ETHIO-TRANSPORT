@@ -226,8 +226,7 @@ async function flushQueuedActions(){if(!navigator.onLine)return;const current=lo
 
 export default function Home(){
  const [lang,setLang]=useState<Lang>("am"), [active,setActive]=useState<ServiceId|null>(null), [heroIndex,setHeroIndex]=useState(0), [cardVisualIndex,setCardVisualIndex]=useState(0);
- const [showWelcomeSplash,setShowWelcomeSplash]=useState(true);
- const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[membershipCheckFailed,setMembershipCheckFailed]=useState(false),[customerRef,setCustomerRef]=useState("");
+  const [membershipChecked,setMembershipChecked]=useState(false),[membershipActive,setMembershipActive]=useState(false),[membershipCheckFailed,setMembershipCheckFailed]=useState(false),[customerRef,setCustomerRef]=useState("");
  const [ownerActivationCode,setOwnerActivationCode]=useState(""),[ownerActivationMessage,setOwnerActivationMessage]=useState(""),[ownerActivationLoading,setOwnerActivationLoading]=useState(false);
  const [authorizedAccessOpen,setAuthorizedAccessOpen]=useState(false),[authorizedAccessCode,setAuthorizedAccessCode]=useState(""),[authorizedAccessMessage,setAuthorizedAccessMessage]=useState(""),[authorizedAccessLoading,setAuthorizedAccessLoading]=useState(false);
  const [origin,setOrigin]=useState(""),[destination,setDestination]=useState(""),[tripDate,setTripDate]=useState("");
@@ -243,8 +242,7 @@ export default function Home(){
  const ticketItems=ticketProviders.length?ticketProviders.map(p=>{const base=ticketPlatforms.find(x=>x.name===p.name)||ticketPlatforms[0];return {name:p.name,meta:p.source_id?.organization_name||"Verified provider",url:p.booking_url,image:base.image}}):ticketPlatforms;
  const operatorItems=operatorProviders.length?operatorProviders.map((p,i)=>{const base=operators.find(x=>x[0]===p.name)||operators[i%operators.length];return {name:p.name,image:base?.[1]||operators[0][1],url:p.booking_url,source:p.source_id?.organization_name||"Verified source"}}):operators.map(([name,image])=>({name,image,url:"https://i-ticket.et/",source:"Ticket directory"}));
 
- useEffect(()=>{const timer=window.setTimeout(()=>setShowWelcomeSplash(false),3000);return()=>window.clearTimeout(timer)},[]);
- useEffect(()=>{
+  useEffect(()=>{
    setLang(load<Lang>("ethio_transport_lang","am"));
    setSavedTrips(load("ethio_transport_trips",[]));
    flushQueuedActions();
@@ -436,23 +434,6 @@ export default function Home(){
    }finally{setOwnerActivationLoading(false)}
  }
 
- if(showWelcomeSplash){
-  return <main className="welcome-splash" role="status" aria-label="ETHIO TRANSPORT">
-    <div className="welcome-stage">
-      <div className="welcome-bus-door" aria-hidden="true">
-        <div className="welcome-door-top" />
-        <div className="welcome-door-panel welcome-door-panel-left" />
-        <div className="welcome-door-panel welcome-door-panel-right" />
-        <div className="welcome-door-threshold" />
-      </div>
-      <div className="welcome-message" aria-live="polite">
-        <span>ETHIO TRANSPORT</span>
-        <h1>እንኳን በደኅና መጡ</h1>
-      </div>
-      <small className="welcome-photo-credit">Photo: Shagada / Wikimedia Commons • Public Domain</small>
-    </div>
-  </main>;
- }
  {/* Membership status is checked in the background for payment/account flows.
      It must never block the public transport information and service hub. */}
  if(membershipChecked && !membershipActive && !membershipCheckFailed){
