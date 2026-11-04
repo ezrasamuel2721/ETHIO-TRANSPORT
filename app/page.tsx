@@ -270,8 +270,10 @@ export default function Home(){
        return data;
      };
      const request=async(url:string)=>{
+       const controller=new AbortController();
+       const timeout=window.setTimeout(()=>controller.abort(),8000);
        try{
-         return await parse(await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"}}));
+         return await parse(await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"},signal:controller.signal}));
        }catch(fetchError){
          return await new Promise<any>((resolve,reject)=>{
            const xhr=new XMLHttpRequest();
@@ -290,6 +292,8 @@ export default function Home(){
            xhr.ontimeout=()=>reject(new Error("Membership request timeout"));
            xhr.send();
          });
+       } finally {
+         window.clearTimeout(timeout);
        }
      };
      let lastError:any;
@@ -434,7 +438,7 @@ export default function Home(){
    }finally{setOwnerActivationLoading(false)}
  }
 
- if(!membershipChecked){return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}><div style={{background:"#fff",padding:30,borderRadius:20,textAlign:"center"}}><strong>ETHIO TRANSPORT</strong><p>{lang==="am"?"የመግቢያ ፈቃድ በማረጋገጥ ላይ…":"Checking access…"}</p></div></section></main>}
+ if(!membershipChecked){return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}><div style={{maxWidth:520,width:"100%",background:"#fff",padding:28,borderRadius:22,textAlign:"center",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}><strong style={{color:"#176b4a"}}>ETHIO TRANSPORT</strong><p>{lang==="am"?"የመግቢያ ፈቃድ በማረጋገጥ ላይ…":"Checking access…"}</p><small>{lang==="am"?"እባክዎ ትንሽ ይጠብቁ።":"Please wait a moment."}</small><div style={{marginTop:18,display:"grid",gap:10}}><button type="button" onClick={()=>setOwnerActivationOpen(v=>!v)}>{lang==="am"?"የባለቤት መግቢያ":"Owner access"}</button>{ownerActivationOpen&&<form onSubmit={e=>{e.preventDefault();activateOwnerAccess()}}><input type="password" inputMode="numeric" maxLength={4} value={ownerActivationCode} onChange={e=>setOwnerActivationCode(e.target.value)} placeholder={lang==="am"?"4 አሃዝ የባለቤት ኮድ":"4-digit owner code"}/><button type="submit" disabled={ownerActivationLoading||ownerActivationCode.length!==4}>{ownerActivationLoading?"…":(lang==="am"?"አረጋግጥ":"Verify owner")}</button>{ownerActivationMessage&&<p>{ownerActivationMessage}</p>}</form>}<button type="button" onClick={()=>window.location.reload()}>{lang==="am"?"እንደገና ሞክር":"Retry"}</button></div></div></section></main>}
 if(membershipCheckFailed){return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}><div style={{background:"#fff",padding:30,borderRadius:20,textAlign:"center"}}><strong>ETHIO TRANSPORT</strong><h2>{lang==="am"?"የመግቢያ ማረጋገጫ አልተሳካም":"Access verification unavailable"}</h2><p>{lang==="am"?"ኢንተርኔትዎን ያረጋግጡና እንደገና ይሞክሩ።":"Check your connection and retry."}</p><button onClick={()=>window.location.reload()}>{lang==="am"?"እንደገና ሞክር":"Retry"}</button></div></section></main>}
 if(!membershipActive){return <main className="app"><section className="service-status" style={{minHeight:"100vh",display:"grid",placeItems:"center",padding:24}}><div style={{maxWidth:540,width:"100%",background:"#fff",padding:28,borderRadius:22,textAlign:"center",boxShadow:"0 18px 60px rgba(0,0,0,.14)"}}><strong style={{color:"#176b4a"}}>ETHIO TRANSPORT</strong><h1>{lang==="am"?"አባልነት ያስፈልጋል":"Membership required"}</h1><p>{lang==="am"?"ከመድረኩ ባለቤትና በባለቤቱ ፈቃድ ከተሰጠው ሰው በስተቀር ሌሎች ተጠቃሚዎች 250 ብር የ1 ዓመት አባልነት ይከፍላሉ።":"All users must pay 250 ETB for one year, except the platform owner and a person explicitly authorized by the owner."}</p><h2 style={{color:"#176b4a"}}>250 ETB / 1 year</h2><div style={{padding:12,background:"#f3f7f5",borderRadius:12,textAlign:"left"}}><b>Customer Reference</b><div style={{fontFamily:"monospace",wordBreak:"break-all"}}>{customerRef}</div></div><a href={"/payment?customerRef="+encodeURIComponent(customerRef)} style={{display:"block",marginTop:14,padding:15,borderRadius:12,background:"#176b4a",color:"#fff",textDecoration:"none",fontWeight:900}}>{lang==="am"?"250 ብር ክፈል":"Pay 250 ETB"}</a><button type="button" onClick={()=>setAuthorizedAccessOpen(v=>!v)} style={{marginTop:14}}>{lang==="am"?"የተፈቀደ መግቢያ":"Authorized access"}</button>{authorizedAccessOpen&&<form onSubmit={e=>{e.preventDefault();activateAuthorizedAccess()}}><input type="password" value={authorizedAccessCode} onChange={e=>setAuthorizedAccessCode(e.target.value)} placeholder={lang==="am"?"የፈቃድ ኮድ":"Authorization code"}/><button type="submit" disabled={authorizedAccessLoading||!authorizedAccessCode.trim()}>{authorizedAccessLoading?"…":(lang==="am"?"አረጋግጥ":"Verify")}</button>{authorizedAccessMessage&&<p>{authorizedAccessMessage}</p>}</form>}<button type="button" onClick={()=>setOwnerActivationOpen(v=>!v)} style={{display:"block",margin:"12px auto 0"}}>{lang==="am"?"የባለቤት መግቢያ":"Owner access"}</button>{ownerActivationOpen&&<form onSubmit={e=>{e.preventDefault();activateOwnerAccess()}}><input type="password" value={ownerActivationCode} onChange={e=>setOwnerActivationCode(e.target.value)} placeholder={lang==="am"?"የባለቤት ኮድ":"Owner code"}/><button type="submit" disabled={ownerActivationLoading||!ownerActivationCode.trim()}>{ownerActivationLoading?"…":(lang==="am"?"አረጋግጥ":"Verify owner")}</button>{ownerActivationMessage&&<p>{ownerActivationMessage}</p>}</form>}</div></section></main>}
 return <main className="app">
