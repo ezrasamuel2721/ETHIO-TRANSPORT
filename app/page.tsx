@@ -270,16 +270,27 @@ export default function Home(){
        return data;
      };
      const request=async(url:string)=>{
-       const controller=new AbortController();
-       const timeout=window.setTimeout(()=>controller.abort(),8000);
+       // Keep the whole request bounded. The previous fetch→XHR fallback could
+       // take ~18s per URL and was repeated 6 times, leaving the app apparently
+       // stuck on the access-verification screen.
+       const requestWithTimeout=async()=>{
+         const controller=new AbortController();
+         const timeout=window.setTimeout(()=>controller.abort(),7000);
+         try{
+           return await parse(await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"},signal:controller.signal}));
+         } finally {
+           window.clearTimeout(timeout);
+         }
+       };
        try{
-         return await parse(await fetch(url,{cache:"no-store",credentials:"same-origin",headers:{Accept:"application/json"},signal:controller.signal}));
+         return await requestWithTimeout();
        }catch(fetchError){
+         // One short XHR fallback for WebView/network stacks that reject fetch.
          return await new Promise<any>((resolve,reject)=>{
            const xhr=new XMLHttpRequest();
            xhr.open("GET",url,true);
            xhr.setRequestHeader("Accept","application/json");
-           xhr.timeout=10000;
+           xhr.timeout=5000;
            xhr.onload=()=>{
              try{
                if(xhr.status<200||xhr.status>=300) throw new Error("Membership check failed: "+xhr.status);
@@ -292,8 +303,6 @@ export default function Home(){
            xhr.ontimeout=()=>reject(new Error("Membership request timeout"));
            xhr.send();
          });
-       } finally {
-         window.clearTimeout(timeout);
        }
      };
      let lastError:any;
@@ -303,7 +312,7 @@ export default function Home(){
      throw lastError||new Error("Membership service unavailable");
    };
    const checkMembership=async()=>{
-     for(let attempt=1;attempt<=6;attempt++){
+     for(let attempt=1;attempt<=2;attempt++){
        try{
          const data=await requestMembership();
          if(cancelled)return;
